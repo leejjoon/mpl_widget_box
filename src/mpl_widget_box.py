@@ -14,7 +14,7 @@ from matplotlib.offsetbox import (OffsetBox,
                                   DrawingArea, TextArea,
                                   OffsetImage)
 
-from widgets import HPacker, VPacker
+from widgets import HPacker, VPacker, HWidgets
 
 from widgets import (WidgetBoxEvent,
                      Title, Label, Button, CheckBox, Radio, Sub, Dropdown)
@@ -73,6 +73,7 @@ class WidgetBoxManager():
         sub = SubGuiBox(widgets, ax,
                         artist=artist,
                         xy=xy, xybox=xybox,
+                        sticky=sticky
                         )
 
         self.add_container(sub, zorder=zorder)
@@ -102,6 +103,10 @@ class WidgetBoxManager():
             a = callback_info["a"]
             ax = a.axes or event.inaxes
 
+            xy = callback_info.get("xy", (1, 1))
+            xybox = callback_info.get("xybox", (10, -10))
+            sticky = callback_info.get("sticky", True)
+
             if ax is None:
                 # print("ax is None, skip.")
                 return
@@ -115,10 +120,24 @@ class WidgetBoxManager():
                 widgets = callback_info["widgets"]
                 c = self.add_sub_widget_box(widgets, ax,
                                             artist=a,
-                                            sticky=True,
-                                            xy=(1, 1), xybox=(10, -10),
+                                            sticky=sticky,
+                                            # xy=(1, 1), xybox=(10, -10),
+                                            xy=xy, xybox=xybox,
                                             zorder=10)
                 self._ephemeral_containers[wid] = c
+
+        elif callback_info["command"] == "update_widget":
+            # print("update", callback_info)
+            update_func = callback_info["update_func"]
+            update_func(callback_info["value"])
+            self.purge_ephemeral_containers()
+
+    def purge_ephemeral_containers(self):
+        to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
+                         if not c.sticky]
+        for wid, c in to_be_deleted:
+            self.remove_container(c)
+            del self._ephemeral_containers[wid]
 
     def handle_event_n_draw(self, event):
         for zorder, c in sorted(self._container_list,
@@ -130,7 +149,10 @@ class WidgetBoxManager():
             e = None
 
         if e and e.callback_info:
+            # note that some of the callback need to call `purge_emphemeral`.
             self.handle_callback(event, e)
+        else:
+            self.purge_ephemeral_containers()
 
         if e is not None and e.wid is not None:
             if self._callback is not None:
@@ -283,7 +305,11 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
 
 
 class SubGuiBox(AnchoredWidgetContainer):
-    pass
+    def __init__(self, widgets, ax,
+                 artist=None, xy=(0, 1), xybox=(0, 0), sticky=True):
+        super().__init__(widgets, ax,
+                         artist=artist, xy=xy, xybox=xybox)
+        self.sticky = sticky
 
 
 # WidgetBox should contain a single box
@@ -291,7 +317,15 @@ class WidgetBoxBase():
     def __init__(self, widgets):
 
         self._widgets = widgets
-        self._handler = WidgetsEventHandler(widgets)
+        flattened_widgets = [] # self._widgets
+        for w in self._widgets:
+            if isinstance(w, HWidgets):
+                flattened_widgets.extend(w.get_child_widgets())
+            else:
+                flattened_widgets.append(w)
+            # print(w)
+        print(flattened_widgets)
+        self._handler = WidgetsEventHandler(flattened_widgets)
 
         self.box = self.wrap(widgets)
 
@@ -302,17 +336,21 @@ class WidgetBoxBase():
         _pack = VPacker(children=widgets,
                         pad=3, sep=3,
                         # **kwargs
-                        )
+                        mode="expand")
 
-        wrapped = HPacker(children=[_pack], pad=0, sep=0)
+        wrapped = HPacker(children=[_pack], pad=0, sep=0, mode="expand")
 
         return wrapped
 
     def get_widgets(self):
         return self._widgets
 
+    def get_box(self):
+        return self.box
+
     def handle_event(self, event, parent=None):
 
+        parent = self
         e = self._handler.handle_event(event, parent=parent)
 
         return e
@@ -383,13 +421,17 @@ def test1():
 
     widgets = [
         Title("title0", "My Widgets"),
-        Sub("sub1", "Sub", sub_widgets),
-        Dropdown("sub1", "Sub", sub_widgets),
+        # Sub("sub1", "Sub", sub_widgets),
+        # Dropdown("dropdown", "Dropdown", ["123", "456"]),
+        HWidgets(children=[Label("label2", "dropdow"),
+                           Dropdown("dropdown", "Dropdown", ["123", "456"])],
+                 align="baseline"),
         # Label("btn3", "-- Label --"),
         Radio("radio", ["Ag", "Bc"]),
         # Label("btn3", "-- Label --"),
         CheckBox("check", ["1", "2", "3"], title="Check"),
-        Button("btn1", "   Click   "),
+        Button("btn1", "Click", centered=True),
+        HWidgets(children=[Button("btn2", "A"),Button("btn3", "B")])
     ]
 
     wbm.add_anchored_widget_box(widgets, ax,
