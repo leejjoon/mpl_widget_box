@@ -251,10 +251,10 @@ class Button(Label):
 
 class Sub(Label):
     def build_label(self, label, button_label):
-        button_label.set_text(label)
-        button = OffsetImage(icons[8]["dropdown_button"])
-        label = HPacker(children=[button,
-                                  button_label
+        # button_label.set_text(label)
+        button = OffsetImage(icons[10]["popup_button"])
+        label = HPacker(children=[button_label,
+                                  button
                                   ],
                         pad=1, sep=2,
                         align="baseline")
@@ -263,7 +263,10 @@ class Sub(Label):
     def __init__(self, wid, label, widgets, pad=None, draw_frame=True,
                  where="selected", **kwargs):
 
-        self._button_label = TextArea("")
+        if isinstance(label, str):
+            self._button_label = TextArea("")
+        else:
+            self._button_label = label
         label_box = self.build_label(label, self._button_label)
         super().__init__(wid, label_box, pad=pad, draw_frame=draw_frame,
                          **kwargs)
@@ -296,16 +299,25 @@ class SelectableBase():
     def get_boxes(self, labels):
         boxes = []
         for l in labels:
-            if isinstance(l, str):
-                box = self.get_default_box(l)
-                boxes.append(box)
-            else:
-                boxes.append(l)
+            box = self.get_default_box(l)
+            boxes.append(box)
+            # if isinstance(l, str):
+            # else:
+            #     boxes.append(l)
 
         return boxes
 
 
 class Dropdown(Sub, SelectableBase):
+    def build_label(self, label, button_label):
+        # button_label.set_text(label)
+        button = OffsetImage(icons[8]["dropdown_button"])
+        label = HPacker(children=[button,
+                                  button_label
+                                  ],
+                        pad=1, sep=2,
+                        align="baseline")
+        return label
 
     def get_default_box(self, l):
         box = Label(l, l)
@@ -380,10 +392,17 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.button_off.set_figure(fig)
 
     def get_default_box(self, l):
-        box = HPacker(children=[self.button_off,
-                                TextArea(l)],
-                      pad=1, sep=2,
-                      align="baseline")
+        if isinstance(l, str):
+            box = HPacker(children=[self.button_off,
+                                    TextArea(l)],
+                          pad=1, sep=2,
+                          align="baseline")
+        else:
+            box = HPacker(children=[self.button_off,
+                                    l],
+                          pad=1, sep=2,
+                          align="baseline")
+
         return box
 
     def get_initial_selected(self, selected):
