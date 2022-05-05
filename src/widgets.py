@@ -66,6 +66,19 @@ class BaseWidget(PaddedBox):
 
         self.stale = False
 
+    def handle_event(self, event, parent=None):
+        if event.name == "motion_notify_event":
+            return self.handle_motion_notify(event, parent)
+        elif event.name == "button_press_event":
+            return self.handle_button_press(event, parent)
+        print("ee", event.name)
+
+    def handle_button_press(self, event, parent=None):
+        return None
+
+    def handle_motion_notify(self, event, parent=None):
+        return None
+
 
 class Centered(BaseWidget):
     def update_child_offsets(self, renderer, outer_bbox):
@@ -144,6 +157,14 @@ class WidgetBoxEvent():
         return f"Event: {self.wid} {self.auxinfo}"
 
 
+class MouseOverEvent(WidgetBoxEvent):
+    def __init__(self, event, wid,
+                 widget, auxinfo=None, callback_info=None):
+        super().__init__(event, wid, auxinfo=auxinfo, callback_info=callback_info)
+        self.widget = widget
+
+
+
 class Label(BaseWidget):
     def set_label(self, l):
         self.box.set_text(l)
@@ -156,6 +177,8 @@ class Label(BaseWidget):
 
     def __init__(self, wid, label, pad=None, draw_frame=True,
                  auxinfo=None):
+        self._mouse_on = False
+
         self.wid = wid
         self.label = label
         self.auxinfo = auxinfo if auxinfo is not None else {}
@@ -177,9 +200,23 @@ class Label(BaseWidget):
     def get_status(self):
         return {}
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
         # print("pressed", self.label)
         return WidgetBoxEvent(event, None, auxinfo=self.auxinfo)
+
+    def handle_motion_notify(self, event, parent=None):
+        auxinfo = {}
+        if self._mouse_on == False:
+            self._mouse_on = True
+            print("entering")
+            auxinfo["mouse_entered"] = True
+
+        return MouseOverEvent(event, self.wid, self, auxinfo=auxinfo)
+
+    def set_mouse_leave(self):
+        self._mouse_on = False
+        print("leaving")
+
 
 class Title(Label):
     def _get_textprops(self):
@@ -245,9 +282,18 @@ class Button(Label):
             patheffects.Normal()
         ])
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
         return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
 
+    def draw_with_outer_bbox(self, renderer, outer_bbox):
+        patch = self.button_box.patch
+
+        if self._mouse_on:
+            patch.update(dict(fc="#6200ee"))
+        else:
+            patch.update(dict(fc="#6200cc"))
+
+        return super().draw_with_outer_bbox(renderer, outer_bbox)
 
 class Sub(Label):
     def build_label(self, label, button_label):
@@ -276,7 +322,7 @@ class Sub(Label):
         self.sub_widgets = widgets
         self.where = where
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
 
         if self.where == "selected":
             a = self
@@ -345,7 +391,7 @@ class Dropdown(Sub, SelectableBase):
 
         self.patch.update(dict(ec="none", fc="#FFFFDD"))
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
 
         if self.where == "selected":
             a = self
@@ -465,7 +511,7 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
         self.selected[:] = [i]
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
 
         i -= self._title_offset
@@ -504,7 +550,7 @@ class DropdownMenu(Radio):
         self.button_off = OffsetImage(icons[8]["empty"])
 
 
-    def handle_event(self, event, parent=None):
+    def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
 
         i -= self._title_offset

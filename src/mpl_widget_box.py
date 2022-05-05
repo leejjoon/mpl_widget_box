@@ -8,6 +8,7 @@ axes and setup the event handling.
 import logging
 
 import operator
+from widgets import MouseOverEvent
 
 from matplotlib.offsetbox import (OffsetBox,
                                   AnnotationBbox,
@@ -36,6 +37,8 @@ class WidgetBoxManager():
         self._cid_list = {}
 
         self._ephemeral_containers = {}
+
+        self._mouse_owner = None
 
     def set_callback(self, callback):
         self._callback = callback
@@ -93,6 +96,10 @@ class WidgetBoxManager():
         cid = self.fig.canvas.mpl_connect('button_press_event',
                                           self.handle_event_n_draw)
         self._cid_list["button_press_event"] = cid
+
+        cid = self.fig.canvas.mpl_connect('motion_notify_event',
+                                          self.handle_event_n_draw)
+        self._cid_list["motion_notify_event"] = cid
 
         cid = self.fig.canvas.mpl_connect('draw_event',
                                           self.save_n_draw)
@@ -160,19 +167,40 @@ class WidgetBoxManager():
         else:
             e = None
 
-        if e and e.callback_info:
-            # note that some of the callback need to call `purge_emphemeral`.
-            self.handle_callback(event, e)
-        else:
-            self.purge_ephemeral_containers(e)
+        need_redraw = False
+        if event.name == "motion_notify_event":
+            if isinstance(e, MouseOverEvent):
+                if self._mouse_owner != e.widget:
+                    if self._mouse_owner is not None:
+                        self._mouse_owner.set_mouse_leave()
+                        need_redraw = True
+                    self._mouse_owner = e.widget
+                    need_redraw = True
+            else:
+                if self._mouse_owner is not None:
+                    self._mouse_owner.set_mouse_leave()
+                    self._mouse_owner = None
+                    need_redraw = True
 
-        if e is not None and e.wid is not None:
-            if self._callback is not None:
-                status = self.get_status()
-                # print(status)
-                self._callback(self, e, status)
+            # self._mouse_owner = e.wid
 
-        self.draw_widgets(event)
+        if event.name in ["button_press_event"]:
+            if e and e.callback_info:
+                # note that some of the callback need to call `purge_emphemeral`.
+                self.handle_callback(event, e)
+            else:
+                self.purge_ephemeral_containers(e)
+
+            if e is not None and e.wid is not None:
+                if self._callback is not None:
+                    status = self.get_status()
+                    # print(status)
+                    self._callback(self, e, status)
+
+        # if drawing is needed.
+        if event.name in ["button_press_event"] or need_redraw:
+            print("drawing")
+            self.draw_widgets(event)
 
     def savebg(self, event):
         canvas = self.fig.canvas
