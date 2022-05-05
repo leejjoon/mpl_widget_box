@@ -12,9 +12,11 @@ class EventHandlerBase():
         renderer = mpl_event.canvas.get_renderer()
 
         for i, b in enumerate(self.get_child_widgets()):
-            w = b.get_event_area(renderer)
+            if hasattr(b, "get_event_area"):
+                w = b.get_event_area(renderer)
+            else:
+                w = b.get_window_extent(renderer)
             if w.contains(mpl_event.x, mpl_event.y):
-                # self.logger.debug(f"selected {i}")
                 return i, b
 
         return -1, None

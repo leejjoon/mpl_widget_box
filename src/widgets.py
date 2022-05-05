@@ -137,6 +137,9 @@ class WidgetBoxEvent():
         self.auxinfo = auxinfo if auxinfo is not None else {}
         self.callback_info = callback_info
 
+        # the container that the event is triggered.
+        self.container_info = {}
+
     def __repr__(self):
         return f"Event: {self.wid} {self.auxinfo}"
 

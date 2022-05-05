@@ -68,12 +68,14 @@ class WidgetBoxManager():
     def add_sub_widget_box(self, widgets, ax,
                            sticky=True, artist=None,
                            xy=(1, 1), xybox=(10, -10),
+                           parent=None,
                            zorder=0):
 
         sub = SubGuiBox(widgets, ax,
                         artist=artist,
                         xy=xy, xybox=xybox,
-                        sticky=sticky
+                        sticky=sticky,
+                        parent=parent
                         )
 
         self.add_container(sub, zorder=zorder)
@@ -123,6 +125,7 @@ class WidgetBoxManager():
                                             sticky=sticky,
                                             # xy=(1, 1), xybox=(10, -10),
                                             xy=xy, xybox=xybox,
+                                            parent=e.container_info["container"],
                                             zorder=10)
                 self._ephemeral_containers[wid] = c
 
@@ -130,18 +133,27 @@ class WidgetBoxManager():
             # print("update", callback_info)
             update_func = callback_info["update_func"]
             update_func(callback_info["value"])
-            self.purge_ephemeral_containers()
+            self.purge_ephemeral_containers(e)
 
-    def purge_ephemeral_containers(self):
+    def purge_ephemeral_containers(self, event):
+        event_container = event.container_info.get("container", None) if event else None
+        # if event_container is not None:
+        #     print("## ancestor", event_container.get_ancestors())
+        # to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
+        #                  if (not c.sticky) or (event_container is not c)]
         to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
-                         if not c.sticky]
+                         if (not c.sticky) or not c.is_ancestor_of(event_container)]
+
         for wid, c in to_be_deleted:
             self.remove_container(c)
             del self._ephemeral_containers[wid]
 
     def handle_event_n_draw(self, event):
-        for zorder, c in sorted(self._container_list,
-                                key=operator.itemgetter(0), reverse=True):
+        # for zorder, c in sorted(self._container_list,
+        #                         key=operator.itemgetter(0), reverse=True):
+        print("-- BEGIN --")
+        for zorder, c in reversed(sorted(self._container_list,
+                                         key=operator.itemgetter(0))):
             e = c.handle_event(event, parent=self)
             if e is not None:
                 break
@@ -152,7 +164,7 @@ class WidgetBoxManager():
             # note that some of the callback need to call `purge_emphemeral`.
             self.handle_callback(event, e)
         else:
-            self.purge_ephemeral_containers()
+            self.purge_ephemeral_containers(e)
 
         if e is not None and e.wid is not None:
             if self._callback is not None:
@@ -214,6 +226,10 @@ class WidgetBoxContainerBase():
                 break
         else:
             e = None
+
+        if e is not None:
+            e.container_info["container"] = self
+            pass
 
         return e
 
@@ -306,11 +322,28 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
 
 class SubGuiBox(AnchoredWidgetContainer):
     def __init__(self, widgets, ax,
-                 artist=None, xy=(0, 1), xybox=(0, 0), sticky=True):
+                 artist=None, xy=(0, 1), xybox=(0, 0),
+                 parent=None,
+                 sticky=True):
         super().__init__(widgets, ax,
                          artist=artist, xy=xy, xybox=xybox)
-        self.sticky = sticky
 
+        # sticky for only for event from the same container.
+        self.sticky = sticky
+        self.parent = parent
+
+    def get_ancestors(self):
+        if hasattr(self.parent, "get_ancestors"):
+            return list(self.parent.get_ancestors()) + [self.parent]
+        else:
+            return [self.parent]
+
+    def is_ancestor_of(self, c):
+        my_ancestors = self.get_ancestors()
+        n = len(my_ancestors)
+        if c is not None and hasattr(c, "get_ancestors"):
+            ancestors = c.get_ancestors()
+            return my_ancestors == ancestors[:n]
 
 # WidgetBox should contain a single box
 class WidgetBoxBase():
@@ -324,7 +357,6 @@ class WidgetBoxBase():
             else:
                 flattened_widgets.append(w)
             # print(w)
-        print(flattened_widgets)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
         self.box = self.wrap(widgets)
@@ -439,9 +471,8 @@ def test1():
                                 # callback=cb
                                 )
 
-    def cb(wb, event, status):
-        pass
-        # print(status)
+    def cb(wb, ev, status):
+        print(ev, status)
 
     wbm.set_callback(cb)
 
