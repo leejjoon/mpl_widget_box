@@ -11,7 +11,7 @@ import operator
 from widgets import MouseOverEvent
 
 from matplotlib.offsetbox import (OffsetBox,
-                                  AnnotationBbox,
+                                  AnnotationBbox as _AnnotationBbox,
                                   DrawingArea, TextArea,
                                   OffsetImage)
 
@@ -22,6 +22,26 @@ from widgets import (WidgetBoxEvent,
 
 from event_handler import (WidgetBoxEventHandler,
                            EventHandlerBase, WidgetsEventHandler)
+
+class AnnotationBbox(_AnnotationBbox):
+    def draw(self, renderer):
+        # docstring inherited
+        if renderer is not None:
+            self._renderer = renderer
+        if not self.get_visible() or not self._check_xy(renderer):
+            return
+        self.update_positions(renderer)
+        if self.arrow_patch is not None:
+            if self.arrow_patch.figure is None and self.figure is not None:
+                self.arrow_patch.figure = self.figure
+            self.arrow_patch.draw(renderer)
+        self.patch.draw(renderer)
+        delayed_draws = self.offsetbox.draw(renderer)
+        self.stale = False
+
+        return delayed_draws
+
+
 
 
 class WidgetBoxManager():
@@ -199,7 +219,6 @@ class WidgetBoxManager():
 
         # if drawing is needed.
         if event.name in ["button_press_event"] or need_redraw:
-            print("drawing")
             self.draw_widgets(event)
 
     def savebg(self, event):
@@ -219,8 +238,15 @@ class WidgetBoxManager():
                 self.fig.canvas.blit(self.fig.bbox)
 
     def draw_child_containers(self, event):
+        delayed_draws = []
         for zorder, c in self._container_list:
-            c.draw_widgets(event)
+            _ = c.draw_widgets(event)
+            delayed_draws.extend(_ or [])
+
+        renderer = event.canvas.get_renderer()
+        for draw in delayed_draws:
+            draw(renderer)
+
 
     def get_status(self):
         status = {}
@@ -268,11 +294,16 @@ class WidgetBoxContainerBase():
         if not self.installed:
             raise RuntimeError("need to be installed before drawing")
 
-        self.draw_container(event)
+        # delayed_draws = self.draw_container(event) or []
+        delayed_draws = []
+
         for zorder, wb in self.iter_wb_list(reverse=False):
             # self.draw_widget(w, event)
-            wb.draw_widgets(event,
-                            draw_method=self.get_draw_widget_method())
+            dd = wb.draw_widgets(event,
+                                 draw_method=self.get_draw_widget_method())
+            delayed_draws.extend(dd or [])
+
+        return delayed_draws
 
     def get_status(self):
         status = {}
@@ -423,7 +454,9 @@ class WidgetBoxBase():
         return status
 
     def draw_widgets(self, event, draw_method):
-        draw_method(self.box)
+        renderer = event.canvas.get_renderer()
+        return self.box.draw(renderer)
+        # return draw_method(self.box)
 
 
 class AnchoredWidgetBox(WidgetBoxBase):

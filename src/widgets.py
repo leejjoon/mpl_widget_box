@@ -16,15 +16,33 @@ icons = load_from_json("icons.json")
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 
+# For widgets, their `draw` method is modified to support delayed draws, i.e.,
+# the need to retunr any delayed draws. You need to make sure that they are not
+# lost in the middle which does not support `draw` with return vlaues.
+
 class BaseWidget(PaddedBox):
+
+    def __init__(self, child, pad=0., draw_frame=False, patch_attrs=None,
+                 tooltip=None):
+        super().__init__(child, pad=pad, draw_frame=draw_frame, patch_attrs=patch_attrs)
+
+        if tooltip is not None:
+            self.tooltip = self.create_tooltip(tooltip)
+        else:
+            self.tooltip = None
+
+        self._mouse_on = False
+
     def get_event_area(self, renderer):
         return self.patch.get_window_extent(renderer)
 
     def draw_frame_with_outer_bbox(self, renderer, outer_bbox):
 
         dpicor = renderer.points_to_pixels(1.)
-        pad = self.pad * dpicor
+        # pad = self.pad * dpicor
+        pad = 0
         ypad = 0.
+        # ypad = pad
 
         frame_bbox = mtransforms.Bbox.from_bounds(outer_bbox.xmin + pad,
                                                   outer_bbox.ymin + ypad,
@@ -42,6 +60,12 @@ class BaseWidget(PaddedBox):
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
             c.set_offset((px + ox, py + oy))
 
+    def draw(self, renderer):
+        super().draw(renderer)
+        if self.tooltip is not None and self._mouse_on:
+            # delayed draw method
+            return [self.draw_tooltip]
+
     def draw_with_outer_bbox(self, renderer, outer_bbox):
         # a copy of PaddedBox.draw.
         # The only change is to us draw_frame_with_outer_bbox to draw frame
@@ -51,6 +75,7 @@ class BaseWidget(PaddedBox):
 
         self.draw_frame_with_outer_bbox(renderer, outer_bbox)
 
+        delayed_draws = []
         for c in self.get_visible_children():
             if hasattr(c, "draw_with_outer_bbox"):
                 dpicor = renderer.points_to_pixels(1.)
@@ -60,18 +85,24 @@ class BaseWidget(PaddedBox):
                                                               outer_bbox.width - 2*pad,
                                                               outer_bbox.height - 2*pad)
 
-                c.draw_with_outer_bbox(renderer, new_outer_bbox)
+                _ = c.draw_with_outer_bbox(renderer, new_outer_bbox)
+                delayed_draws.extend(_ or [])
             else:
-                c.draw(renderer)
+                _ = c.draw(renderer)
+                delayed_draws.extend(_ or [])
 
         self.stale = False
+
+        if self.tooltip is not None and self._mouse_on:
+            delayed_draws.append(self.draw_tooltip)
+
+        return delayed_draws
 
     def handle_event(self, event, parent=None):
         if event.name == "motion_notify_event":
             return self.handle_motion_notify(event, parent)
         elif event.name == "button_press_event":
             return self.handle_button_press(event, parent)
-        print("ee", event.name)
 
     def handle_button_press(self, event, parent=None):
         return None
@@ -79,6 +110,29 @@ class BaseWidget(PaddedBox):
     def handle_motion_notify(self, event, parent=None):
         return None
 
+    def create_tooltip(self, tooltip):
+        box = TextArea(tooltip)
+        xy=(0.5, 0)
+        xybox=(0, -5)
+        wrapped_box = AnnotationBbox(box, xy=xy,
+                                     xybox=xybox,
+                                     xycoords=self.patch,
+                                     boxcoords="offset points",
+                                     box_alignment=(0.5, 1),
+                                     pad=0.3,
+                                     animated=True)
+        return  wrapped_box
+
+    def set_figure(self, fig):
+        super().set_figure(fig)
+        if self.tooltip is not None:
+            self.tooltip.set_figure(fig)
+
+    def draw_tooltip(self, renderer):
+        # if self.tooltip is not None:
+        self.tooltip.draw(renderer)
+
+ 
 
 class Centered(BaseWidget):
     def update_child_offsets(self, renderer, outer_bbox):
@@ -91,42 +145,68 @@ class Centered(BaseWidget):
 import matplotlib.transforms as mtransforms
 from matplotlib.offsetbox import bbox_artist
 
-class VPacker(_VPacker):
-    def get_event_area(self, renderer):
-        return self.get_window_extent(renderer)
+class DrawWithDelayed():
 
     def draw(self, renderer):
         """
         Update the location of children if necessary and draw them
         to the given *renderer*.
         """
+        # Modifie from OffsetBox.draw.
         my_bbox = self.get_extent_offsets(renderer)
         w, h, xdescent, ydescent, offsets = my_bbox
         px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
 
-        left = px - xdescent
-
+        delayed_draws = []
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
             c.set_offset((px + ox, py + oy))
             if hasattr(c, "draw_with_outer_bbox"):
-                cb = c.get_window_extent(renderer)
-                outer_bbox = mtransforms.Bbox.from_bounds(left, cb.ymin, w, cb.height)
-                c.draw_with_outer_bbox(renderer, outer_bbox)
+                # update the outer_bbox
+                outer_bbox = self._get_outer_bbox(px, py, my_bbox,
+                                                  c.get_window_extent(renderer))
+                dd = c.draw_with_outer_bbox(renderer, outer_bbox)
             else:
-                c.draw(renderer)
+                dd = c.draw(renderer)
+
+            delayed_draws.extend(dd or [])
 
         # not sure the role of this
         bbox_artist(self, renderer, fill=False, props=dict(pad=0.))
 
         self.stale = False
 
+        return delayed_draws
 
-class HPacker(_HPacker):
+
+class VPacker(DrawWithDelayed, _VPacker):
     def get_event_area(self, renderer):
         return self.get_window_extent(renderer)
 
-    # def draw_with_outer_bbox(self, renderer, outer_bbox):
-    #     self.draw(renderer)
+    def _get_outer_bbox(self, px, py, bbox, cb):
+        # bbox : bbox of the self
+        # cb : bbox of the child
+        w, h, xdescent, ydescent, offsets = bbox
+        left = px - xdescent
+
+        outer_bbox = mtransforms.Bbox.from_bounds(left, cb.ymin, w, cb.height)
+
+        return outer_bbox
+
+
+class HPacker(DrawWithDelayed, _HPacker):
+    def get_event_area(self, renderer):
+        return self.get_window_extent(renderer)
+
+    def _get_outer_bbox(self, px, py, bbox, cb):
+        # bbox : bbox of the self
+        # cb : bbox of the child
+        w, h, xdescent, ydescent, offsets = bbox
+
+        bottom = py - ydescent
+
+        outer_bbox = mtransforms.Bbox.from_bounds(cb.xmin, bottom, cb.width, h)
+
+        return outer_bbox
 
 
 class HWidgets(HPacker):
@@ -176,8 +256,7 @@ class Label(BaseWidget):
         patch.update(dict(ec="none"))
 
     def __init__(self, wid, label, pad=None, draw_frame=True,
-                 auxinfo=None):
-        self._mouse_on = False
+                 auxinfo=None, **kwargs):
 
         self.wid = wid
         self.label = label
@@ -193,7 +272,7 @@ class Label(BaseWidget):
             raise ValueError("incorrect label")
         self.box = box
 
-        super().__init__(box, pad=pad, draw_frame=draw_frame)
+        super().__init__(box, pad=pad, draw_frame=draw_frame, **kwargs)
         # self.patch.update(dict(ec="none", fc="#DDDDDD"))
         self._update_patch(self.patch)
 
@@ -249,8 +328,8 @@ class Button(Label):
             self.button_box = BaseWidget(box, pad=3,
                                          draw_frame=draw_frame)
 
-
-        super().__init__(wid, self.button_box, pad=pad, draw_frame=False)
+        super().__init__(wid, self.button_box, pad=pad, draw_frame=False,
+                         **kwargs)
         # self.patch.update(dict(ec="none", fc="#DDDDDD"))
         self._update_patch(self.patch)
 
@@ -285,7 +364,7 @@ class Button(Label):
     def handle_button_press(self, event, parent=None):
         return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
 
-    def draw_with_outer_bbox(self, renderer, outer_bbox):
+    def _update_patch_for_mouse_over(self, renderer):
         patch = self.button_box.patch
 
         if self._mouse_on:
@@ -293,7 +372,18 @@ class Button(Label):
         else:
             patch.update(dict(fc="#6200cc"))
 
+    def draw(self, renderer):
+
+        self._update_patch_for_mouse_over(renderer)
+
+        return super().draw(renderer)
+
+    def draw_with_outer_bbox(self, renderer, outer_bbox):
+
+        self._update_patch_for_mouse_over(renderer)
+
         return super().draw_with_outer_bbox(renderer, outer_bbox)
+
 
 class Sub(Label):
     def build_label(self, label, button_label):
