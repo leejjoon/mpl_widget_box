@@ -24,12 +24,9 @@ class EventHandlerBase():
     def handle_event(self, event, parent=None):
 
         _, b = self.get_responsible_child(event)
-        # print(b)
         if hasattr(b, "handle_event"):
             e = b.handle_event(event, parent=parent)
         else:
-            print(b)
-            print("No event handler defined")
             e = None
         return e
 
@@ -43,6 +40,7 @@ class EventHandlerBase():
 
     def get_box(self):
         raise RuntimeError()
+
 
 class WidgetsEventHandler(EventHandlerBase):
     def __init__(self, widgets):
@@ -73,6 +71,7 @@ class WidgetsEventHandler(EventHandlerBase):
 
     def get_box(self):
         raise RuntimeError()
+
 
 class WidgetBoxEventHandlerBase(EventHandlerBase):
     def __init__(self, box, debug=False):

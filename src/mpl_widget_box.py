@@ -183,9 +183,6 @@ class WidgetBoxManager():
             del self._ephemeral_containers[wid]
 
     def handle_event_n_draw(self, event):
-        # for zorder, c in sorted(self._container_list,
-        #                         key=operator.itemgetter(0), reverse=True):
-        print("-- BEGIN --")
         for zorder, c in reversed(sorted(self._container_list,
                                          key=operator.itemgetter(0))):
             e = c.handle_event(event, parent=self)
