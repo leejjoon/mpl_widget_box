@@ -79,11 +79,13 @@ class WidgetBoxManager():
                                 xy=(0, 1), xybox=(10, -10),
                                 # callback=None,
                                 # install_args=None,
+                                dir="v",
                                 zorder=0):
 
         wc = AnchoredWidgetContainer(widgets, ax,
                                      xy=xy, xybox=xybox,
                                      #install_args=install_args
+                                     dir=dir
                                      )
 
         self.add_container(wc, zorder=zorder)
@@ -364,17 +366,19 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
     def __init__(self, widgets, ax,
-                 artist=None, xy=(0, 1), xybox=(0, 0)):
+                 artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
 
         widget_box = self._make_widget_box(widgets, ax,
-                                           artist=artist, xy=xy, xybox=xybox)
+                                           artist=artist, xy=xy, xybox=xybox,
+                                           dir=dir)
         super().__init__(widget_box, ax)
 
     def _make_widget_box(self, widgets, ax,
-                         artist=None, xy=(0, 1), xybox=(0, 0)):
+                         artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
 
         _widget_box = AnchoredWidgetBox(widgets, ax,
-                                        artist=artist, xy=xy, xybox=xybox)
+                                        artist=artist, xy=xy, xybox=xybox,
+                                        dir=dir)
 
         return _widget_box
 
@@ -406,7 +410,7 @@ class SubGuiBox(AnchoredWidgetContainer):
 
 # WidgetBox should contain a single box
 class WidgetBoxBase():
-    def __init__(self, widgets):
+    def __init__(self, widgets, dir="v"):
 
         self._widgets = widgets
         flattened_widgets = [] # self._widgets
@@ -418,18 +422,26 @@ class WidgetBoxBase():
             # print(w)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
-        self.box = self.wrap(widgets)
+        self.box = self.wrap(widgets, dir=dir)
 
     def get_artist(self):
         return self.box
 
-    def wrap(self, widgets):
-        _pack = VPacker(children=widgets,
-                        pad=3, sep=3,
-                        # **kwargs
-                        mode="expand")
+    def wrap(self, widgets, dir="v"):
+        if dir == "h":
+            _pack = HPacker(children=widgets,
+                            pad=3, sep=3,
+                            # **kwargs
+                            mode="expand")
 
-        wrapped = HPacker(children=[_pack], pad=0, sep=0, mode="expand")
+            wrapped = VPacker(children=[_pack], pad=0, sep=0, mode="expand")
+        else:
+            _pack = VPacker(children=widgets,
+                            pad=3, sep=3,
+                            # **kwargs
+                            mode="expand")
+
+            wrapped = HPacker(children=[_pack], pad=0, sep=0, mode="expand")
 
         return wrapped
 
@@ -465,26 +477,37 @@ class WidgetBoxBase():
 
 
 class AnchoredWidgetBox(WidgetBoxBase):
-    def __init__(self, widgets, ax, artist=None, xy=(0, 1), xybox=(0, 0)):
+    def __init__(self, widgets, ax, artist=None,
+                 xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+                 dir="v"):
 
-        install_args = dict(artist=artist, xy=xy, xybox=xybox)
+        install_args = dict(artist=artist, xy=xy, xybox=xybox,
+                            box_alignment=box_alignment)
 
         self._install_args = install_args
         self.ax = ax
 
-        super().__init__(widgets)
+        super().__init__(widgets, dir=dir)
 
-    def wrap(self, widgets):
-        _pack = VPacker(children=widgets,
-                        pad=3, sep=3,
-                        )
-        box = HPacker(children=[_pack], pad=0, sep=0)
+    def wrap(self, widgets, dir="v"):
+        if dir == "h":
+            _pack = HPacker(children=widgets,
+                            pad=1, sep=2, align="bottom"
+                            )
+            box = VPacker(children=[_pack], pad=0, sep=0)
+        else:
+            _pack = VPacker(children=widgets,
+                            pad=1, sep=2,
+                            )
+            box = HPacker(children=[_pack], pad=0, sep=0)
+
         wrapped = self._make_wrapped_widget_box(self.ax, box,
                                                 **self._install_args)
         return wrapped
 
     def _make_wrapped_widget_box(self, ax, box,
-                                 artist=None, xy=(0, 1), xybox=(0, 0)):
+                                 artist=None, xy=(0, 1), xybox=(0, 0),
+                                 box_alignment=(0, 1)):
         if artist is None:
             artist = ax
 
