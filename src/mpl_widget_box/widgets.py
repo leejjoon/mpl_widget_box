@@ -16,9 +16,13 @@ from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
 from event_handler import WidgetBoxEventHandlerBase
 
-from icon_helper import load_from_json
+from icon_helper import load_from_json_string
 
-icons = load_from_json("icons.json")
+import pkgutil
+
+s = pkgutil.get_data("mpl_widget_box", "icons.json")
+
+icons = load_from_json_string(s)
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 

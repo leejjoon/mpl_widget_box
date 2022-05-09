@@ -38,3 +38,14 @@ def load_from_json(fn):
             ff.setdefault(int(fontsize), {})[k] = dict2numpy(r)
 
     return ff
+
+
+def load_from_json_string(s):
+    fdict2 = json.loads(s)
+
+    ff = {}
+    for fontsize, d in fdict2.items():
+        for k, r in d.items():
+            ff.setdefault(int(fontsize), {})[k] = dict2numpy(r)
+
+    return ff
