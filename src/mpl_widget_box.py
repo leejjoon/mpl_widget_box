@@ -76,11 +76,16 @@ class WidgetBoxManager():
         self._container_list.remove((z, c))
 
     def add_anchored_widget_box(self, widgets, ax,
-                                xy=(0, 1), xybox=(10, -10),
-                                # callback=None,
-                                # install_args=None,
+                                loc=2,
                                 dir="v",
                                 zorder=0):
+
+        if loc == 2:
+            xy=(0, 1)
+            xybox=(10, -10)
+        else:
+            xy=(0, 1)
+            xybox=(10, -10)
 
         wc = AnchoredWidgetContainer(widgets, ax,
                                      xy=xy, xybox=xybox,
@@ -515,7 +520,7 @@ class AnchoredWidgetBox(WidgetBoxBase):
                                      xybox=xybox,
                                      xycoords=artist,
                                      boxcoords="offset points",
-                                     box_alignment=(0, 1),
+                                     box_alignment=box_alignment,
                                      pad=0.3,
                                      animated=True)
         return wrapped_box
