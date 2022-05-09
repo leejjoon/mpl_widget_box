@@ -10,18 +10,20 @@ import logging
 import operator
 from widgets import MouseOverEvent
 
-from matplotlib.offsetbox import (OffsetBox,
-                                  AnnotationBbox as _AnnotationBbox,
-                                  DrawingArea, TextArea,
-                                  OffsetImage)
+from matplotlib.offsetbox import (
+    OffsetBox,
+    AnnotationBbox as _AnnotationBbox,
+    DrawingArea,
+    TextArea,
+    OffsetImage,
+)
 
 from widgets import HPacker, VPacker, HWidgets
 
-from widgets import (WidgetBoxEvent,
-                     Title, Label, Button, CheckBox, Radio, Sub, Dropdown)
+from widgets import WidgetBoxEvent, Title, Label, Button, CheckBox, Radio, Sub, Dropdown
 
-from event_handler import (WidgetBoxEventHandler,
-                           EventHandlerBase, WidgetsEventHandler)
+from event_handler import WidgetBoxEventHandler, EventHandlerBase, WidgetsEventHandler
+
 
 class AnnotationBbox(_AnnotationBbox):
     def draw(self, renderer):
@@ -42,9 +44,7 @@ class AnnotationBbox(_AnnotationBbox):
         return delayed_draws
 
 
-
-
-class WidgetBoxManager():
+class WidgetBoxManager:
     def __init__(self, fig, callback=None, **kw):
         self._container_list = []
         # self._wb_list = []
@@ -75,38 +75,41 @@ class WidgetBoxManager():
 
         self._container_list.remove((z, c))
 
-    def add_anchored_widget_box(self, widgets, ax,
-                                loc=2,
-                                dir="v",
-                                zorder=0):
+    def add_anchored_widget_box(self, widgets, ax, loc=2, dir="v", zorder=0):
 
         if loc == 2:
-            xy=(0, 1)
-            xybox=(10, -10)
+            xy = (0, 1)
+            xybox = (10, -10)
         else:
-            xy=(0, 1)
-            xybox=(10, -10)
+            xy = (0, 1)
+            xybox = (10, -10)
 
-        wc = AnchoredWidgetContainer(widgets, ax,
-                                     xy=xy, xybox=xybox,
-                                     #install_args=install_args
-                                     dir=dir
-                                     )
+        wc = AnchoredWidgetContainer(
+            widgets,
+            ax,
+            xy=xy,
+            xybox=xybox,
+            # install_args=install_args
+            dir=dir,
+        )
 
         self.add_container(wc, zorder=zorder)
 
-    def add_sub_widget_box(self, widgets, ax,
-                           sticky=True, artist=None,
-                           xy=(1, 1), xybox=(10, -10),
-                           parent=None,
-                           zorder=0):
+    def add_sub_widget_box(
+        self,
+        widgets,
+        ax,
+        sticky=True,
+        artist=None,
+        xy=(1, 1),
+        xybox=(10, -10),
+        parent=None,
+        zorder=0,
+    ):
 
-        sub = SubGuiBox(widgets, ax,
-                        artist=artist,
-                        xy=xy, xybox=xybox,
-                        sticky=sticky,
-                        parent=parent
-                        )
+        sub = SubGuiBox(
+            widgets, ax, artist=artist, xy=xy, xybox=xybox, sticky=sticky, parent=parent
+        )
 
         self.add_container(sub, zorder=zorder)
 
@@ -120,16 +123,17 @@ class WidgetBoxManager():
             if not wc.installed():
                 wc.install()
 
-        cid = self.fig.canvas.mpl_connect('button_press_event',
-                                          self.handle_event_n_draw)
+        cid = self.fig.canvas.mpl_connect(
+            "button_press_event", self.handle_event_n_draw
+        )
         self._cid_list["button_press_event"] = cid
 
-        cid = self.fig.canvas.mpl_connect('motion_notify_event',
-                                          self.handle_event_n_draw)
+        cid = self.fig.canvas.mpl_connect(
+            "motion_notify_event", self.handle_event_n_draw
+        )
         self._cid_list["motion_notify_event"] = cid
 
-        cid = self.fig.canvas.mpl_connect('draw_event',
-                                          self.save_n_draw)
+        cid = self.fig.canvas.mpl_connect("draw_event", self.save_n_draw)
         self._cid_list["draw_event"] = cid
 
     def handle_callback(self, event, e):
@@ -154,13 +158,17 @@ class WidgetBoxManager():
             else:
 
                 widgets = callback_info["widgets"]
-                c = self.add_sub_widget_box(widgets, ax,
-                                            artist=a,
-                                            sticky=sticky,
-                                            # xy=(1, 1), xybox=(10, -10),
-                                            xy=xy, xybox=xybox,
-                                            parent=e.container_info["container"],
-                                            zorder=10)
+                c = self.add_sub_widget_box(
+                    widgets,
+                    ax,
+                    artist=a,
+                    sticky=sticky,
+                    # xy=(1, 1), xybox=(10, -10),
+                    xy=xy,
+                    xybox=xybox,
+                    parent=e.container_info["container"],
+                    zorder=10,
+                )
                 self._ephemeral_containers[wid] = c
 
         elif callback_info["command"] == "update_widget":
@@ -175,16 +183,20 @@ class WidgetBoxManager():
         #     print("## ancestor", event_container.get_ancestors())
         # to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
         #                  if (not c.sticky) or (event_container is not c)]
-        to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
-                         if (not c.sticky) or not c.is_ancestor_of(event_container)]
+        to_be_deleted = [
+            (wid, c)
+            for (wid, c) in self._ephemeral_containers.items()
+            if (not c.sticky) or not c.is_ancestor_of(event_container)
+        ]
 
         for wid, c in to_be_deleted:
             self.remove_container(c)
             del self._ephemeral_containers[wid]
 
     def handle_event_n_draw(self, event):
-        for zorder, c in reversed(sorted(self._container_list,
-                                         key=operator.itemgetter(0))):
+        for zorder, c in reversed(
+            sorted(self._container_list, key=operator.itemgetter(0))
+        ):
             e = c.handle_event(event, parent=self)
             if e is not None:
                 break
@@ -251,7 +263,6 @@ class WidgetBoxManager():
         for draw in delayed_draws:
             draw(renderer)
 
-
     def get_named_status(self):
         status = {}
         for zorder, c in self._container_list:
@@ -259,9 +270,11 @@ class WidgetBoxManager():
 
         return status
 
+
 # containers can have multiple widget_boxes.
 
-class WidgetBoxContainerBase():
+
+class WidgetBoxContainerBase:
     def __init__(self):
         # if wb_list is None:
         #     wb_list = []
@@ -272,13 +285,15 @@ class WidgetBoxContainerBase():
         self._wb_list.append((zorder, widget_box))
 
     def iter_wb_list(self, reverse=False):
-        for zorder, wb in sorted(self._wb_list,
-                                 key=operator.itemgetter(0), reverse=reverse):
+        for zorder, wb in sorted(
+            self._wb_list, key=operator.itemgetter(0), reverse=reverse
+        ):
             yield zorder, wb
 
     def handle_event(self, event, parent=None):
-        for zorder, wb in sorted(self._wb_list,
-                                key=operator.itemgetter(0), reverse=True):
+        for zorder, wb in sorted(
+            self._wb_list, key=operator.itemgetter(0), reverse=True
+        ):
             e = wb.handle_event(event, parent=parent)
             if e is not None:
                 break
@@ -303,8 +318,7 @@ class WidgetBoxContainerBase():
 
         for zorder, wb in self.iter_wb_list(reverse=False):
             # self.draw_widget(w, event)
-            dd = wb.draw_widgets(event,
-                                 draw_method=self.get_draw_widget_method())
+            dd = wb.draw_widgets(event, draw_method=self.get_draw_widget_method())
             delayed_draws.extend(dd or [])
 
         return delayed_draws
@@ -367,31 +381,36 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
 
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
-    def __init__(self, widgets, ax,
-                 artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
+    def __init__(self, widgets, ax, artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
 
-        widget_box = self._make_widget_box(widgets, ax,
-                                           artist=artist, xy=xy, xybox=xybox,
-                                           dir=dir)
+        widget_box = self._make_widget_box(
+            widgets, ax, artist=artist, xy=xy, xybox=xybox, dir=dir
+        )
         super().__init__(widget_box, ax)
 
-    def _make_widget_box(self, widgets, ax,
-                         artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
+    def _make_widget_box(
+        self, widgets, ax, artist=None, xy=(0, 1), xybox=(0, 0), dir="v"
+    ):
 
-        _widget_box = AnchoredWidgetBox(widgets, ax,
-                                        artist=artist, xy=xy, xybox=xybox,
-                                        dir=dir)
+        _widget_box = AnchoredWidgetBox(
+            widgets, ax, artist=artist, xy=xy, xybox=xybox, dir=dir
+        )
 
         return _widget_box
 
 
 class SubGuiBox(AnchoredWidgetContainer):
-    def __init__(self, widgets, ax,
-                 artist=None, xy=(0, 1), xybox=(0, 0),
-                 parent=None,
-                 sticky=True):
-        super().__init__(widgets, ax,
-                         artist=artist, xy=xy, xybox=xybox)
+    def __init__(
+        self,
+        widgets,
+        ax,
+        artist=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        parent=None,
+        sticky=True,
+    ):
+        super().__init__(widgets, ax, artist=artist, xy=xy, xybox=xybox)
 
         # sticky for only for event from the same container.
         self.sticky = sticky
@@ -410,12 +429,13 @@ class SubGuiBox(AnchoredWidgetContainer):
             ancestors = c.get_ancestors()
             return my_ancestors == ancestors[:n]
 
+
 # WidgetBox should contain a single box
-class WidgetBoxBase():
+class WidgetBoxBase:
     def __init__(self, widgets, dir="v"):
 
         self._widgets = widgets
-        flattened_widgets = [] # self._widgets
+        flattened_widgets = []  # self._widgets
         for w in self._widgets:
             if isinstance(w, HWidgets):
                 flattened_widgets.extend(w.get_child_widgets())
@@ -431,17 +451,23 @@ class WidgetBoxBase():
 
     def wrap(self, widgets, dir="v"):
         if dir == "h":
-            _pack = HPacker(children=widgets,
-                            pad=3, sep=3,
-                            # **kwargs
-                            mode="expand")
+            _pack = HPacker(
+                children=widgets,
+                pad=3,
+                sep=3,
+                # **kwargs
+                mode="expand",
+            )
 
             wrapped = VPacker(children=[_pack], pad=0, sep=0, mode="expand")
         else:
-            _pack = VPacker(children=widgets,
-                            pad=3, sep=3,
-                            # **kwargs
-                            mode="expand")
+            _pack = VPacker(
+                children=widgets,
+                pad=3,
+                sep=3,
+                # **kwargs
+                mode="expand",
+            )
 
             wrapped = HPacker(children=[_pack], pad=0, sep=0, mode="expand")
 
@@ -462,29 +488,29 @@ class WidgetBoxBase():
 
     def get_named_status(self):
         status = self._handler.get_named_status()
-        # for w in self.get_widgets():
-        #     print("st", w)
-        #     if hasattr(w, "wid"):
-        #         print("sttttt", w.wid, w.get_status())
-
-        # status = dict((w.wid, dict(widget=w, status=w.get_status()))
-        #               for w in self.get_widgets() if hasattr(w, "wid"))
 
         return status
 
     def draw_widgets(self, event, draw_method):
         renderer = event.canvas.get_renderer()
         return self.box.draw(renderer)
-        # return draw_method(self.box)
 
 
 class AnchoredWidgetBox(WidgetBoxBase):
-    def __init__(self, widgets, ax, artist=None,
-                 xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
-                 dir="v"):
+    def __init__(
+        self,
+        widgets,
+        ax,
+        artist=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        box_alignment=(0, 1),
+        dir="v",
+    ):
 
-        install_args = dict(artist=artist, xy=xy, xybox=xybox,
-                            box_alignment=box_alignment)
+        install_args = dict(
+            artist=artist, xy=xy, xybox=xybox, box_alignment=box_alignment
+        )
 
         self._install_args = install_args
         self.ax = ax
@@ -493,33 +519,35 @@ class AnchoredWidgetBox(WidgetBoxBase):
 
     def wrap(self, widgets, dir="v"):
         if dir == "h":
-            _pack = HPacker(children=widgets,
-                            pad=1, sep=2, align="bottom"
-                            )
+            _pack = HPacker(children=widgets, pad=1, sep=2, align="bottom")
             box = VPacker(children=[_pack], pad=0, sep=0)
         else:
-            _pack = VPacker(children=widgets,
-                            pad=1, sep=2,
-                            )
+            _pack = VPacker(
+                children=widgets,
+                pad=1,
+                sep=2,
+            )
             box = HPacker(children=[_pack], pad=0, sep=0)
 
-        wrapped = self._make_wrapped_widget_box(self.ax, box,
-                                                **self._install_args)
+        wrapped = self._make_wrapped_widget_box(self.ax, box, **self._install_args)
         return wrapped
 
-    def _make_wrapped_widget_box(self, ax, box,
-                                 artist=None, xy=(0, 1), xybox=(0, 0),
-                                 box_alignment=(0, 1)):
+    def _make_wrapped_widget_box(
+        self, ax, box, artist=None, xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1)
+    ):
         if artist is None:
             artist = ax
 
-        wrapped_box = AnnotationBbox(box, xy=xy,
-                                     xybox=xybox,
-                                     xycoords=artist,
-                                     boxcoords="offset points",
-                                     box_alignment=box_alignment,
-                                     pad=0.3,
-                                     animated=True)
+        wrapped_box = AnnotationBbox(
+            box,
+            xy=xy,
+            xybox=xybox,
+            xycoords=artist,
+            boxcoords="offset points",
+            box_alignment=box_alignment,
+            pad=0.3,
+            animated=True,
+        )
         return wrapped_box
 
 
@@ -527,40 +555,44 @@ def test1():
     import numpy as np
 
     import matplotlib.pyplot as plt
-    from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
-                                      AnnotationBbox)
-
-    # plt.rcParams["font.family"] = "sans-serif"
-    # plt.rcParams["font.sans-serif"] = ["Source Code Pro"]
+    from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
 
     fig, ax = plt.subplots(num=2, clear=True)
     ax.plot(np.random.rand(10))
 
     wbm = WidgetBoxManager(fig)
 
-    sub_widgets = [Label("btn4", "-- Label --"),
-                   Radio("radio2", ["Ag3", "Bc3"]),
-                   ]
+    sub_widgets = [
+        Label("btn4", "-- Label --"),
+        Radio("radio2", ["Ag3", "Bc3"]),
+    ]
 
     widgets = [
         Title("title0", "My Widgets"),
         # Sub("sub1", "Sub", sub_widgets),
         # Dropdown("dropdown", "Dropdown", ["123", "456"]),
-        HWidgets(children=[Label("label2", "dropdow"),
-                           Dropdown("dropdown", "Dropdown", ["123", "456"])],
-                 align="baseline"),
+        HWidgets(
+            children=[
+                Label("label2", "dropdow"),
+                Dropdown("dropdown", "Dropdown", ["123", "456"]),
+            ],
+            align="baseline",
+        ),
         # Label("btn3", "-- Label --"),
         Radio("radio", ["Ag", "Bc"]),
         # Label("btn3", "-- Label --"),
         CheckBox("check", ["1", "2", "3"], title="Check"),
         Button("btn1", "Click", centered=True),
-        HWidgets(children=[Button("btn2", "A"),Button("btn3", "B")])
+        HWidgets(children=[Button("btn2", "A"), Button("btn3", "B")]),
     ]
 
-    wbm.add_anchored_widget_box(widgets, ax,
-                                xy=(0, 1), xybox=(10, -10),
-                                # callback=cb
-                                )
+    wbm.add_anchored_widget_box(
+        widgets,
+        ax,
+        xy=(0, 1),
+        xybox=(10, -10),
+        # callback=cb
+    )
 
     def cb(wb, ev, status):
         print(ev, status)
@@ -573,5 +605,5 @@ def test1():
     return wbm
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test1()

@@ -2,18 +2,22 @@ from itertools import zip_longest
 
 from matplotlib.offsetbox import PaddedBox
 
-from matplotlib.offsetbox import (OffsetBox,
-                                  AnnotationBbox,
-                                  DrawingArea, TextArea,
-                                  OffsetImage,
-                                  HPacker, VPacker)
+from matplotlib.offsetbox import (
+    OffsetBox,
+    AnnotationBbox,
+    DrawingArea,
+    TextArea,
+    OffsetImage,
+    HPacker,
+    VPacker,
+)
 
-from matplotlib.offsetbox import (VPacker as _VPacker,
-                                  HPacker as _HPacker)
+from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
 from event_handler import WidgetBoxEventHandlerBase
 
 from icon_helper import load_from_json
+
 icons = load_from_json("icons.json")
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
@@ -22,10 +26,17 @@ icons = load_from_json("icons.json")
 # the need to retunr any delayed draws. You need to make sure that they are not
 # lost in the middle which does not support `draw` with return vlaues.
 
-class BaseWidget(PaddedBox):
 
-    def __init__(self, child, pad=0., draw_frame=False, patch_attrs=None,
-                 tooltip=None, expand=True):
+class BaseWidget(PaddedBox):
+    def __init__(
+        self,
+        child,
+        pad=0.0,
+        draw_frame=False,
+        patch_attrs=None,
+        tooltip=None,
+        expand=True,
+    ):
         super().__init__(child, pad=pad, draw_frame=draw_frame, patch_attrs=patch_attrs)
 
         if tooltip is not None:
@@ -45,10 +56,9 @@ class BaseWidget(PaddedBox):
 
         if self._expand:
 
-            frame_bbox = mtransforms.Bbox.from_bounds(outer_bbox.xmin,
-                                                      outer_bbox.ymin,
-                                                      outer_bbox.width,
-                                                      outer_bbox.height)
+            frame_bbox = mtransforms.Bbox.from_bounds(
+                outer_bbox.xmin, outer_bbox.ymin, outer_bbox.width, outer_bbox.height
+            )
 
             self.update_frame(frame_bbox)
         else:
@@ -81,12 +91,14 @@ class BaseWidget(PaddedBox):
         delayed_draws = []
         for c in self.get_visible_children():
             if hasattr(c, "draw_with_outer_bbox"):
-                dpicor = renderer.points_to_pixels(1.)
+                dpicor = renderer.points_to_pixels(1.0)
                 pad = self.pad * dpicor
-                new_outer_bbox = mtransforms.Bbox.from_bounds(outer_bbox.xmin + pad,
-                                                              outer_bbox.ymin + pad,
-                                                              outer_bbox.width - 2*pad,
-                                                              outer_bbox.height - 2*pad)
+                new_outer_bbox = mtransforms.Bbox.from_bounds(
+                    outer_bbox.xmin + pad,
+                    outer_bbox.ymin + pad,
+                    outer_bbox.width - 2 * pad,
+                    outer_bbox.height - 2 * pad,
+                )
 
                 _ = c.draw_with_outer_bbox(renderer, new_outer_bbox)
                 delayed_draws.extend(_ or [])
@@ -115,16 +127,19 @@ class BaseWidget(PaddedBox):
 
     def create_tooltip(self, tooltip):
         box = TextArea(tooltip)
-        xy=(0.5, 0)
-        xybox=(0, -5)
-        wrapped_box = AnnotationBbox(box, xy=xy,
-                                     xybox=xybox,
-                                     xycoords=self.patch,
-                                     boxcoords="offset points",
-                                     box_alignment=(0.5, 1),
-                                     pad=0.3,
-                                     animated=True)
-        return  wrapped_box
+        xy = (0.5, 0)
+        xybox = (0, -5)
+        wrapped_box = AnnotationBbox(
+            box,
+            xy=xy,
+            xybox=xybox,
+            xycoords=self.patch,
+            boxcoords="offset points",
+            box_alignment=(0.5, 1),
+            pad=0.3,
+            animated=True,
+        )
+        return wrapped_box
 
     def set_figure(self, fig):
         super().set_figure(fig)
@@ -142,14 +157,14 @@ class Centered(BaseWidget):
         w, h, xdescent, ydescent, offsets = self.get_extent_offsets(renderer)
         px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
-            c.set_offset((px + (outer_bbox.width-w) * 0.5 + ox, py + oy))
+            c.set_offset((px + (outer_bbox.width - w) * 0.5 + ox, py + oy))
 
 
 import matplotlib.transforms as mtransforms
 from matplotlib.offsetbox import bbox_artist
 
-class DrawWithDelayed():
 
+class DrawWithDelayed:
     def draw(self, renderer):
         """
         Update the location of children if necessary and draw them
@@ -165,8 +180,9 @@ class DrawWithDelayed():
             c.set_offset((px + ox, py + oy))
             if hasattr(c, "draw_with_outer_bbox"):
                 # update the outer_bbox
-                outer_bbox = self._get_outer_bbox(px, py, my_bbox,
-                                                  c.get_window_extent(renderer))
+                outer_bbox = self._get_outer_bbox(
+                    px, py, my_bbox, c.get_window_extent(renderer)
+                )
                 dd = c.draw_with_outer_bbox(renderer, outer_bbox)
             else:
                 dd = c.draw(renderer)
@@ -174,7 +190,7 @@ class DrawWithDelayed():
             delayed_draws.extend(dd or [])
 
         # not sure the role of this
-        bbox_artist(self, renderer, fill=False, props=dict(pad=0.))
+        bbox_artist(self, renderer, fill=False, props=dict(pad=0.0))
 
         self.stale = False
 
@@ -224,10 +240,9 @@ class HWidgets(HPacker):
     # def handle_event(self, event, parent=None):
     #     print("OOO")
 
-class WidgetBoxEvent():
-    def __init__(self, event, wid,
-                 auxinfo=None,
-                 callback_info=None):
+
+class WidgetBoxEvent:
+    def __init__(self, event, wid, auxinfo=None, callback_info=None):
         self.event = event
         self.wid = wid
         self.auxinfo = auxinfo if auxinfo is not None else {}
@@ -241,15 +256,13 @@ class WidgetBoxEvent():
 
 
 class MouseOverEvent(WidgetBoxEvent):
-    def __init__(self, event, wid,
-                 widget, auxinfo=None, callback_info=None):
+    def __init__(self, event, wid, widget, auxinfo=None, callback_info=None):
         super().__init__(event, wid, auxinfo=auxinfo, callback_info=callback_info)
         self.widget = widget
 
 
 class NamedWidget(BaseWidget):
-    def __init__(self, wid, box, pad=None, draw_frame=True,
-                 auxinfo=None, **kwargs):
+    def __init__(self, wid, box, pad=None, draw_frame=True, auxinfo=None, **kwargs):
         self.wid = wid
         self.auxinfo = auxinfo if auxinfo is not None else {}
         super().__init__(box, pad=pad, draw_frame=draw_frame, **kwargs)
@@ -265,8 +278,7 @@ class Label(NamedWidget):
     def _update_patch(self, patch):
         patch.update(dict(ec="none"))
 
-    def __init__(self, wid, label, pad=None, draw_frame=True,
-                 auxinfo=None, **kwargs):
+    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None, **kwargs):
 
         self.label = label
 
@@ -281,8 +293,9 @@ class Label(NamedWidget):
             raise ValueError("incorrect label")
         self.box = box
 
-        super().__init__(wid, box, pad=pad, draw_frame=draw_frame,
-                         auxinfo=auxinfo, **kwargs)
+        super().__init__(
+            wid, box, pad=pad, draw_frame=draw_frame, auxinfo=auxinfo, **kwargs
+        )
 
         self._update_patch(self.patch)
 
@@ -315,6 +328,7 @@ class Title(Label):
     #     pass
     #     # patch.update(dict(ec="none", fc="0.9"))
 
+
 class Button(Label):
     def _get_textprops(self):
         return dict(color="w")
@@ -325,10 +339,17 @@ class Button(Label):
     def get_event_area(self, renderer):
         return self.button_box.patch.get_window_extent()
 
-    def __init__(self, wid, label, pad=3., draw_frame=True,
-                 centered=False,
-                 contextual_themes=None, expand=False,
-                 **kwargs):
+    def __init__(
+        self,
+        wid,
+        label,
+        pad=3.0,
+        draw_frame=True,
+        centered=False,
+        contextual_themes=None,
+        expand=False,
+        **kwargs,
+    ):
 
         self._context = ""
         self._contextual_themes = {} if contextual_themes is None else contextual_themes
@@ -342,40 +363,38 @@ class Button(Label):
         self.box = box
 
         if centered:
-            self.button_box = Centered(box, pad=pad,
-                                       draw_frame=draw_frame)
+            self.button_box = Centered(box, pad=pad, draw_frame=draw_frame)
         else:
-            self.button_box = BaseWidget(box, pad=pad,
-                                         draw_frame=draw_frame, expand=expand)
+            self.button_box = BaseWidget(
+                box, pad=pad, draw_frame=draw_frame, expand=expand
+            )
 
-        super().__init__(wid, self.button_box, pad=3, draw_frame=False,
-                         expand=expand,
-                         **kwargs)
+        super().__init__(
+            wid, self.button_box, pad=3, draw_frame=False, expand=expand, **kwargs
+        )
 
         patch = self.button_box.patch
-        patch.update(dict(fc="#6200ee", ec="#6200ee")) # patch_attrs
+        patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
         patch.set_boxstyle("round,pad=0.3")
         patch.set_mutation_scale(8)
 
         from matplotlib import patheffects
 
-        offset=(2, -2)
-        patch.set_path_effects([# patheffects.withSimplePatchShadow(),
-            patheffects.SimpleLineShadow(
-                offset=offset,
-                shadow_color="0.9",
-                alpha=1.,
-                linewidth=3.),
-            patheffects.SimpleLineShadow(
-                offset=offset,
-                shadow_color="0.8",
-                alpha=1.,
-                linewidth=1.5),
-            patheffects.SimplePatchShadow(offset=offset, shadow_rgbFace="0.7",
-                                          foreground="none",
-                                          alpha=1.),
-            patheffects.Normal()
-        ])
+        offset = (2, -2)
+        patch.set_path_effects(
+            [  # patheffects.withSimplePatchShadow(),
+                patheffects.SimpleLineShadow(
+                    offset=offset, shadow_color="0.9", alpha=1.0, linewidth=3.0
+                ),
+                patheffects.SimpleLineShadow(
+                    offset=offset, shadow_color="0.8", alpha=1.0, linewidth=1.5
+                ),
+                patheffects.SimplePatchShadow(
+                    offset=offset, shadow_rgbFace="0.7", foreground="none", alpha=1.0
+                ),
+                patheffects.Normal(),
+            ]
+        )
 
     def handle_button_press(self, event, parent=None):
         return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
@@ -425,23 +444,19 @@ class Sub(Label):
     def build_label(self, label, button_label):
         # button_label.set_text(label)
         button = OffsetImage(icons[10]["popup_button"])
-        label = HPacker(children=[button_label,
-                                  button
-                                  ],
-                        pad=1, sep=2,
-                        align="baseline")
+        label = HPacker(children=[button_label, button], pad=1, sep=2, align="baseline")
         return label
 
-    def __init__(self, wid, label, widgets, pad=None, draw_frame=True,
-                 where="selected", **kwargs):
+    def __init__(
+        self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
+    ):
 
         if isinstance(label, str):
             self._button_label = TextArea("")
         else:
             self._button_label = label
         label_box = self.build_label(label, self._button_label)
-        super().__init__(wid, label_box, pad=pad, draw_frame=draw_frame,
-                         **kwargs)
+        super().__init__(wid, label_box, pad=pad, draw_frame=draw_frame, **kwargs)
         self.patch.update(dict(ec="none", fc="#FFFFDD"))
 
         # self.set_popup_widgets(widgets)
@@ -455,16 +470,12 @@ class Sub(Label):
         else:
             a = parent.get_box()
 
-        callback_info = dict(command="add_sub",
-                             a=a,
-                             widgets=self.sub_widgets)
+        callback_info = dict(command="add_sub", a=a, widgets=self.sub_widgets)
 
-        return WidgetBoxEvent(event, self.wid,
-                              callback_info=callback_info)
+        return WidgetBoxEvent(event, self.wid, callback_info=callback_info)
 
 
-class SelectableBase():
-
+class SelectableBase:
     def get_default_box(self, l):
         if isinstance(l, str):
             box = TextArea(l)
@@ -489,11 +500,7 @@ class Dropdown(Sub, SelectableBase):
     def build_label(self, label, button_label):
         # button_label.set_text(label)
         button = OffsetImage(icons[8]["dropdown_button"])
-        label = HPacker(children=[button,
-                                  button_label
-                                  ],
-                        pad=1, sep=2,
-                        align="baseline")
+        label = HPacker(children=[button, button_label], pad=1, sep=2, align="baseline")
         return label
 
     def get_default_box(self, l):
@@ -504,16 +511,19 @@ class Dropdown(Sub, SelectableBase):
         self._button_label.set_text(v)
 
     def get_boxes(self, widgets):
-        self.menu = DropdownMenu(self.wid+":select", widgets,
-                                 update_func=self.update_value, pad=0)
+        self.menu = DropdownMenu(
+            self.wid + ":select", widgets, update_func=self.update_value, pad=0
+        )
         menu = [self.menu]
         return menu
 
-    def __init__(self, wid, label, widgets, pad=None, draw_frame=True,
-                 where="selected", **kwargs):
+    def __init__(
+        self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
+    ):
 
-        super().__init__(wid, label, [], pad=pad, draw_frame=draw_frame,
-                         where=where, **kwargs)
+        super().__init__(
+            wid, label, [], pad=pad, draw_frame=draw_frame, where=where, **kwargs
+        )
         widgets = self.get_boxes(widgets)
         self.sub_widgets = widgets
 
@@ -529,13 +539,16 @@ class Dropdown(Sub, SelectableBase):
         else:
             a = parent.get_box()
 
-        callback_info = dict(command="add_sub",
-                             a=a,
-                             widgets=self.sub_widgets,
-                             xy=(0, 0), xybox=(0, -5), sticky=False)
+        callback_info = dict(
+            command="add_sub",
+            a=a,
+            widgets=self.sub_widgets,
+            xy=(0, 0),
+            xybox=(0, -5),
+            sticky=False,
+        )
 
-        return WidgetBoxEvent(event, self.wid,
-                              callback_info=callback_info)
+        return WidgetBoxEvent(event, self.wid, callback_info=callback_info)
 
     def get_status(self):
         return dict(value=self._button_label.get_text())
@@ -557,7 +570,6 @@ class Dropdown(Sub, SelectableBase):
 
 
 class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
-
     def _populate_buttons(self):
         SELECTED_ON = "(O)"
         SELECTED_OFF = "( )"
@@ -576,15 +588,11 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
     def get_default_box(self, l):
         if isinstance(l, str):
-            box = HPacker(children=[self.button_off,
-                                    TextArea(l)],
-                          pad=1, sep=2,
-                          align="baseline")
+            box = HPacker(
+                children=[self.button_off, TextArea(l)], pad=1, sep=2, align="baseline"
+            )
         else:
-            box = HPacker(children=[self.button_off,
-                                    l],
-                          pad=1, sep=2,
-                          align="baseline")
+            box = HPacker(children=[self.button_off, l], pad=1, sep=2, align="baseline")
 
         return box
 
@@ -592,8 +600,7 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         selected = [0] if selected is None else [selected]
         return selected
 
-    def __init__(self, wid, labels, selected=None,
-                 values=None, title=None, pad=3):
+    def __init__(self, wid, labels, selected=None, values=None, title=None, pad=3):
         self.selected = self.get_initial_selected(selected)
         self._populate_buttons()
 
@@ -601,9 +608,9 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
         # label_box = TextArea("Label:")
         if title is not None:
-            label_box = HPacker(children=[TextArea(title)],
-                                pad=1, sep=2,
-                                align="baseline")
+            label_box = HPacker(
+                children=[TextArea(title)], pad=1, sep=2, align="baseline"
+            )
             self.boxes = [label_box]
             self._title_offset = 1
         else:
@@ -619,22 +626,19 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.boxes.extend(self.get_boxes(labels))
 
         kwargs = {}
-        box = VPacker(children=self.boxes,
-                      pad=0, sep=3,
-                      **kwargs)
+        box = VPacker(children=self.boxes, pad=0, sep=3, **kwargs)
 
-        BaseWidget.__init__(self, box, pad=pad,
-                           draw_frame=True)
+        BaseWidget.__init__(self, box, pad=pad, draw_frame=True)
         WidgetBoxEventHandlerBase.__init__(self, box)
 
         self._update_patch(self.patch)
         self.select(selected)
 
     def replace_labels(self, labels, values=None):
-        new_labels =self.get_boxes(labels)
+        new_labels = self.get_boxes(labels)
         for l in new_labels:
             l.set_figure(self.figure)
-        self.boxes[self._title_offset:] = new_labels
+        self.boxes[self._title_offset :] = new_labels
 
         if values is None:
             values = labels
@@ -670,18 +674,27 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         return WidgetBoxEvent(event, self.wid, dict(lid=i, widget=b))
 
     def get_status(self):
-        return dict(selected=self.selected,
-                    value=self.values[self.selected[0]])
+        return dict(selected=self.selected, value=self.values[self.selected[0]])
 
 
 class DropdownMenu(Radio):
     """
     The selection menu when dropdown button is pressed.
     """
-    def __init__(self, wid, labels, selected=None,
-                 values=None, title=None, pad=0, update_func=None):
-        super().__init__(wid, labels, selected=selected,
-                         values=values, title=title, pad=pad)
+
+    def __init__(
+        self,
+        wid,
+        labels,
+        selected=None,
+        values=None,
+        title=None,
+        pad=0,
+        update_func=None,
+    ):
+        super().__init__(
+            wid, labels, selected=selected, values=values, title=title, pad=pad
+        )
         self._update_func = update_func
 
     def _update_patch(self, patch):
@@ -697,7 +710,6 @@ class DropdownMenu(Radio):
         self.button_on = OffsetImage(icons[8]["check_mark"])
         self.button_off = OffsetImage(icons[8]["empty"])
 
-
     def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
 
@@ -707,14 +719,15 @@ class DropdownMenu(Radio):
             self.select(i)
 
         if self._update_func is not None:
-            callback_info = dict(command="update_widget",
-                                 update_func=self._update_func,
-                                 value=self.values[i])
+            callback_info = dict(
+                command="update_widget",
+                update_func=self._update_func,
+                value=self.values[i],
+            )
         else:
             callback_info = None
 
-        return WidgetBoxEvent(event, self.wid,
-                              callback_info=callback_info)
+        return WidgetBoxEvent(event, self.wid, callback_info=callback_info)
 
 
 class CheckBox(Radio):
@@ -741,7 +754,7 @@ class CheckBox(Radio):
 
         o = self._title_offset
 
-        b = self.boxes[o+i]
+        b = self.boxes[o + i]
         if i in self.selected:
             self.selected.remove(i)
             b.get_children()[0] = self.button_off
@@ -750,26 +763,34 @@ class CheckBox(Radio):
             b.get_children()[0] = self.button_on
 
     def get_status(self):
-        return dict(selected=self.selected,
-                    values=[self.values[s] for s in self.selected])
+        return dict(
+            selected=self.selected, values=[self.values[s] for s in self.selected]
+        )
 
 
 class ButtonBar(Radio):
-
     def get_default_box(self, l, tooltip=None):
 
-        contextual_themes = {"selected":dict(fc="#F44336"),
-                             "selected-hover":dict(fc="#F44336"),
-                             "default":dict(fc="w")}
+        contextual_themes = {
+            "selected": dict(fc="#F44336"),
+            "selected-hover": dict(fc="#F44336"),
+            "default": dict(fc="w"),
+        }
 
         if isinstance(l, str):
-            box = Button(self.wid+":"+l, TextArea(l),
-                         contextual_themes=contextual_themes,
-                         tooltip=tooltip)
+            box = Button(
+                self.wid + ":" + l,
+                TextArea(l),
+                contextual_themes=contextual_themes,
+                tooltip=tooltip,
+            )
         else:
-            box = Button(self.wid+":"+str(l), l,
-                         contextual_themes=contextual_themes,
-                         tooltip=tooltip)
+            box = Button(
+                self.wid + ":" + str(l),
+                l,
+                contextual_themes=contextual_themes,
+                tooltip=tooltip,
+            )
 
         return box
 
@@ -788,8 +809,9 @@ class ButtonBar(Radio):
 
         return boxes
 
-    def __init__(self, wid, labels, selected=None,
-                 values=None, tooltips=None, title=None, pad=3):
+    def __init__(
+        self, wid, labels, selected=None, values=None, tooltips=None, title=None, pad=3
+    ):
         self.selected = self.get_initial_selected(selected)
 
         self.wid = wid
@@ -819,12 +841,9 @@ class ButtonBar(Radio):
         print(self.boxes)
 
         kwargs = {}
-        box = HPacker(children=self.boxes,
-                      pad=0, sep=3,
-                      **kwargs)
+        box = HPacker(children=self.boxes, pad=0, sep=3, **kwargs)
 
-        BaseWidget.__init__(self, box, pad=pad,
-                           draw_frame=True)
+        BaseWidget.__init__(self, box, pad=pad, draw_frame=True)
         WidgetBoxEventHandlerBase.__init__(self, box)
 
         self._update_patch(self.patch)

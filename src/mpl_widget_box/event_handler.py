@@ -1,7 +1,7 @@
 import logging
 
 
-class EventHandlerBase():
+class EventHandlerBase:
     def get_child_widgets(self):
         return []
 
@@ -100,16 +100,3 @@ class WidgetBoxEventHandlerBase(EventHandlerBase):
 
 class WidgetBoxEventHandler(WidgetBoxEventHandlerBase):
     pass
-
-
-# class WidgetBoxEventHandler(WidgetBoxEventHandlerBase):
-#     def handle_event(self, event, parent=None):
-#         e = super().handle_event(event, parent=parent)
-#         if e is not None:
-#             pass
-#             # status = [e.get_status() for e in self.children]
-#             # print(e, status)
-#         return e
-
-    # def get_status(self):
-    #     pass
