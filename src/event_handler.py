@@ -33,11 +33,11 @@ class EventHandlerBase():
             e = None
         return e
 
-    def get_status(self):
+    def get_named_status(self):
         # raise ValueError()
         d = {}
         for w in self.get_child_widgets():
-            d.update(w.get_status())
+            d[w.wid] = w.get_status()
 
         return d
 

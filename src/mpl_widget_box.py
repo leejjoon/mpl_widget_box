@@ -213,7 +213,7 @@ class WidgetBoxManager():
 
             if e is not None and e.wid is not None:
                 if self._callback is not None:
-                    status = self.get_status()
+                    status = self.get_named_status()
                     # print(status)
                     self._callback(self, e, status)
 
@@ -248,10 +248,10 @@ class WidgetBoxManager():
             draw(renderer)
 
 
-    def get_status(self):
+    def get_named_status(self):
         status = {}
         for zorder, c in self._container_list:
-            status.update(c.get_status())
+            status.update(c.get_named_status())
 
         return status
 
@@ -305,11 +305,11 @@ class WidgetBoxContainerBase():
 
         return delayed_draws
 
-    def get_status(self):
+    def get_named_status(self):
         status = {}
         for zorder, wb in self.iter_wb_list(reverse=False):
             # self.draw_widget(w, event)
-            s = wb.get_status()
+            s = wb.get_named_status()
             status.update(s)
 
         return status
@@ -446,10 +446,15 @@ class WidgetBoxBase():
 
         return e
 
-    def get_status(self):
+    def get_named_status(self):
+        status = self._handler.get_named_status()
+        # for w in self.get_widgets():
+        #     print("st", w)
+        #     if hasattr(w, "wid"):
+        #         print("sttttt", w.wid, w.get_status())
 
-        status = dict((w.wid, dict(widget=w, status=w.get_status()))
-                      for w in self.get_widgets() if hasattr(w, "wid"))
+        # status = dict((w.wid, dict(widget=w, status=w.get_status()))
+        #               for w in self.get_widgets() if hasattr(w, "wid"))
 
         return status
 
