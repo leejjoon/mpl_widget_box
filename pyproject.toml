@@ -6,7 +6,7 @@ authors = ["Jae-Joon Lee <lee.j.joon@gmail.com>"]
 license = "BSD"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 matplotlib = "^3.5.1"
 numpy = "^1.22.3"
 

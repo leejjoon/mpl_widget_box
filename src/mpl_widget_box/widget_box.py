@@ -8,7 +8,6 @@ axes and setup the event handling.
 import logging
 
 import operator
-from widgets import MouseOverEvent
 
 from matplotlib.offsetbox import (
     OffsetBox,
@@ -18,11 +17,10 @@ from matplotlib.offsetbox import (
     OffsetImage,
 )
 
-from widgets import HPacker, VPacker, HWidgets
+from .widgets import MouseOverEvent
+from .widgets import HPacker, VPacker, HWidgets
 
-from widgets import WidgetBoxEvent, Title, Label, Button, CheckBox, Radio, Sub, Dropdown
-
-from event_handler import WidgetBoxEventHandler, EventHandlerBase, WidgetsEventHandler
+from .event_handler import WidgetsEventHandler
 
 
 class AnnotationBbox(_AnnotationBbox):
@@ -549,61 +547,3 @@ class AnchoredWidgetBox(WidgetBoxBase):
             animated=True,
         )
         return wrapped_box
-
-
-def test1():
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
-
-    fig, ax = plt.subplots(num=2, clear=True)
-    ax.plot(np.random.rand(10))
-
-    wbm = WidgetBoxManager(fig)
-
-    sub_widgets = [
-        Label("btn4", "-- Label --"),
-        Radio("radio2", ["Ag3", "Bc3"]),
-    ]
-
-    widgets = [
-        Title("title0", "My Widgets"),
-        # Sub("sub1", "Sub", sub_widgets),
-        # Dropdown("dropdown", "Dropdown", ["123", "456"]),
-        HWidgets(
-            children=[
-                Label("label2", "dropdow"),
-                Dropdown("dropdown", "Dropdown", ["123", "456"]),
-            ],
-            align="baseline",
-        ),
-        # Label("btn3", "-- Label --"),
-        Radio("radio", ["Ag", "Bc"]),
-        # Label("btn3", "-- Label --"),
-        CheckBox("check", ["1", "2", "3"], title="Check"),
-        Button("btn1", "Click", centered=True),
-        HWidgets(children=[Button("btn2", "A"), Button("btn3", "B")]),
-    ]
-
-    wbm.add_anchored_widget_box(
-        widgets,
-        ax,
-        xy=(0, 1),
-        xybox=(10, -10),
-        # callback=cb
-    )
-
-    def cb(wb, ev, status):
-        print(ev, status)
-
-    wbm.set_callback(cb)
-
-    wbm.install_all()
-
-    plt.show()
-    return wbm
-
-
-if __name__ == "__main__":
-    test1()

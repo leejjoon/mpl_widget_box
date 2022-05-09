@@ -4,19 +4,14 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import (
     TextArea,
     DrawingArea,
-    OffsetImage,
-    AnnotationBbox,
-    HPacker as _HPacker,
 )
 from matplotlib.image import BboxImage
 
-from mpl_widget_box import WidgetBoxManager
+from mpl_widget_box.widget_box import WidgetBoxManager
+from mpl_widget_box.matplotlib_colormaps import get_matplotlib_cmaps
+from mpl_widget_box.mpl_norm_helper import get_norm_da, get_norms
 
-# from guibox_widgets import Label, Button, Radio, Sub, Dropdown
-
-from matplotlib_colormaps import get_matplotlib_cmaps
-
-from widgets import (
+from mpl_widget_box.widgets import (
     Sub,
     Label,
     Radio,
@@ -102,8 +97,6 @@ if True:
     ]
 
     cmap_menu_items = sub_widgets[1]  # this will be used in the callback.
-
-    from mpl_norm_helper import get_norm_da, get_norms
 
     norms = get_norms()
 

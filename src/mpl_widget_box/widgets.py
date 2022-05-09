@@ -14,9 +14,9 @@ from matplotlib.offsetbox import (
 
 from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
-from event_handler import WidgetBoxEventHandlerBase
+from .event_handler import WidgetBoxEventHandlerBase
 
-from icon_helper import load_from_json_string
+from .icon_helper import load_from_json_string
 
 import pkgutil
 
