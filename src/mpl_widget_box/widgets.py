@@ -12,6 +12,22 @@ from matplotlib.offsetbox import (
     VPacker,
 )
 
+import fontawesomefree
+import fontawesome
+from pathlib import Path
+from matplotlib.font_manager import FontProperties
+
+def get_icon_fontprop(family="solid", size=11):
+    root = Path(fontawesomefree.__path__[0])
+    fontname = dict(regular="fa-regular-400.ttf",
+                    solid="fa-solid-900.ttf")[family]
+    fontpath = (root / "static" / "fontawesomefree" / "webfonts"
+                / fontname)
+
+    fontprop = FontProperties(fname=fontpath, size=size)
+
+    return fontprop
+
 from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
 from .event_handler import WidgetBoxEventHandlerBase
@@ -575,12 +591,21 @@ class Dropdown(Sub, SelectableBase):
 
 class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
     def _populate_buttons(self):
-        SELECTED_ON = "(O)"
-        SELECTED_OFF = "( )"
-        # self.button_on = TextArea(SELECTED_ON)
-        # self.button_off = TextArea(SELECTED_OFF)
-        self.button_on = OffsetImage(icons[8]["radio_button_on"])
-        self.button_off = OffsetImage(icons[8]["radio_button_off"])
+        SELECTED_ON = fontawesome.icons["dot-circle"]
+        SELECTED_OFF = fontawesome.icons["circle"]
+        color = "blue"
+
+        fontprop_solid = get_icon_fontprop(family="solid", size=10)
+        fontprop_regular = get_icon_fontprop(family="regular", size=10)
+        self.button_on = TextArea(SELECTED_ON,
+                                  textprops=dict(fontproperties=fontprop_solid,
+                                                 color=color))
+        self.button_off = TextArea(SELECTED_OFF,
+                                  textprops=dict(fontproperties=fontprop_regular,
+                                                 color=color))
+
+        # self.button_on = OffsetImage(icons[8]["radio_button_on"])
+        # self.button_off = OffsetImage(icons[8]["radio_button_off"])
 
     def _set_figure_extra(self, fig):
         self.button_on.set_figure(fig)
@@ -741,12 +766,25 @@ class CheckBox(Radio):
     # button_off = OffsetImage(ff[8]["check_button_off"])
 
     def _populate_buttons(self):
-        SELECTED_ON = "[v]"
-        SELECTED_OFF = "[ ]"
-        # self.button_on = TextArea(SELECTED_ON)
-        # self.button_off = TextArea(SELECTED_OFF)
-        self.button_on = OffsetImage(icons[8]["check_button_on"])
-        self.button_off = OffsetImage(icons[8]["check_button_off"])
+        SELECTED_ON = fontawesome.icons["check-square"]
+        SELECTED_OFF = fontawesome.icons["square"]
+        color = "blue"
+
+        fontprop_solid = get_icon_fontprop(family="solid", size=10)
+        fontprop_regular = get_icon_fontprop(family="regular", size=10)
+        self.button_on = TextArea(SELECTED_ON,
+                                  textprops=dict(fontproperties=fontprop_solid,
+                                                 color=color))
+        self.button_off = TextArea(SELECTED_OFF,
+                                  textprops=dict(fontproperties=fontprop_regular,
+                                                 color=color))
+
+        # SELECTED_ON = "[v]"
+        # SELECTED_OFF = "[ ]"
+        # # self.button_on = TextArea(SELECTED_ON)
+        # # self.button_off = TextArea(SELECTED_OFF)
+        # self.button_on = OffsetImage(icons[8]["check_button_on"])
+        # self.button_off = OffsetImage(icons[8]["check_button_off"])
 
     def get_initial_selected(self, selected):
         selected = [] if selected is None else selected

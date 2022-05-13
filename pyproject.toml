@@ -9,6 +9,8 @@ license = "BSD"
 python = "^3.9"
 matplotlib = "^3.5.1"
 numpy = "^1.22.3"
+fontawesome = "^5.10.1"
+fontawesomefree = "^6.1.1"
 
 [tool.poetry.dev-dependencies]
 jupyter = "^1.0.0"
