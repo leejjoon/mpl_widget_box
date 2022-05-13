@@ -32,14 +32,6 @@ from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
 from .event_handler import WidgetBoxEventHandlerBase
 
-from .icon_helper import load_from_json_string
-
-import pkgutil
-
-s = pkgutil.get_data("mpl_widget_box", "icons.json")
-
-icons = load_from_json_string(s)
-
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 
 # For widgets, their `draw` method is modified to support delayed draws, i.e.,
@@ -463,7 +455,12 @@ class Button(Label):
 class Sub(Label):
     def build_label(self, label, button_label):
         # button_label.set_text(label)
-        button = OffsetImage(icons[10]["popup_button"])
+
+        fontprop_solid = get_icon_fontprop(family="solid", size=10)
+        button = TextArea(fontawesome.icons["plus"],
+                          textprops=dict(fontproperties=fontprop_solid,
+                                         color="b"))
+
         label = HPacker(children=[button_label, button], pad=1, sep=2, align="baseline")
         return label
 
@@ -519,7 +516,13 @@ class SelectableBase:
 class Dropdown(Sub, SelectableBase):
     def build_label(self, label, button_label):
         # button_label.set_text(label)
-        button = OffsetImage(icons[8]["dropdown_button"])
+
+        fontprop_solid = get_icon_fontprop(family="solid", size=10)
+        # fontprop_regular = get_icon_fontprop(family="regular", size=10)
+        button = TextArea(fontawesome.icons["caret-down"],
+                          textprops=dict(fontproperties=fontprop_solid,
+                                         color="red"))
+
         label = HPacker(children=[button, button_label], pad=1, sep=2, align="baseline")
         return label
 
@@ -603,9 +606,6 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.button_off = TextArea(SELECTED_OFF,
                                   textprops=dict(fontproperties=fontprop_regular,
                                                  color=color))
-
-        # self.button_on = OffsetImage(icons[8]["radio_button_on"])
-        # self.button_off = OffsetImage(icons[8]["radio_button_off"])
 
     def _set_figure_extra(self, fig):
         self.button_on.set_figure(fig)
@@ -732,12 +732,18 @@ class DropdownMenu(Radio):
         # self.patch.update(dict(ec="#AAEEEE", fc="#EEFFFF"))
 
     def _populate_buttons(self):
-        SELECTED_ON = "(O)"
-        SELECTED_OFF = "( )"
-        # self.button_on = TextArea(SELECTED_ON)
-        # self.button_off = TextArea(SELECTED_OFF)
-        self.button_on = OffsetImage(icons[8]["check_mark"])
-        self.button_off = OffsetImage(icons[8]["empty"])
+        SELECTED_ON = fontawesome.icons["angle-double-right"]
+        # SELECTED_OFF = fontawesome.icons["angle-double-right"]
+        color = "red"
+
+        fontprop_solid = get_icon_fontprop(family="solid", size=10)
+        fontprop_regular = get_icon_fontprop(family="regular", size=10)
+        self.button_on = TextArea(SELECTED_ON,
+                                  textprops=dict(fontproperties=fontprop_solid,
+                                                 color=color))
+        self.button_off = TextArea(SELECTED_ON,
+                                  textprops=dict(fontproperties=fontprop_solid,
+                                                 color="w"))
 
     def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
@@ -778,13 +784,6 @@ class CheckBox(Radio):
         self.button_off = TextArea(SELECTED_OFF,
                                   textprops=dict(fontproperties=fontprop_regular,
                                                  color=color))
-
-        # SELECTED_ON = "[v]"
-        # SELECTED_OFF = "[ ]"
-        # # self.button_on = TextArea(SELECTED_ON)
-        # # self.button_off = TextArea(SELECTED_OFF)
-        # self.button_on = OffsetImage(icons[8]["check_button_on"])
-        # self.button_off = OffsetImage(icons[8]["check_button_off"])
 
     def get_initial_selected(self, selected):
         selected = [] if selected is None else selected
