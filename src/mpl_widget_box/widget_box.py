@@ -57,6 +57,9 @@ class WidgetBoxManager:
         self._ephemeral_containers = {}
 
         self._mouse_owner = None
+        self._foreign_widgets = []
+
+        self._stealed_lock = None
 
     def set_callback(self, callback):
         self._callback = callback
@@ -191,7 +194,61 @@ class WidgetBoxManager:
             self.remove_container(c)
             del self._ephemeral_containers[wid]
 
+    def steal_event_lock(self):
+        lock = self.fig.canvas.widgetlock
+
+        # do nothing if self is the owner of the lock.
+        if lock.isowner(self):
+            return
+
+        # if self._stealed_lock is not None:
+        #     return
+
+        # now we steal the lock
+        if lock.isowner(None):
+            lock(self)
+            self._stealed_lock = None
+            print("lock acquired")
+        else:
+            self._stealed_lock = lock._owner
+            lock._owner = None
+            lock(self)
+            print("lock stelaed", self._stealed_lock)
+
+    def restore_event_lock(self):
+        lock = self.fig.canvas.widgetlock
+
+        if lock.isowner(self):
+            print("releasing the lock")
+            lock.release(self)
+
+        # if self._stealed_lock is None:
+        #     return
+
+        if self._stealed_lock is not None:
+            # lock._owner = None
+            lock(self._stealed_lock)
+            self._stealed_lock = None
+            print("lock restored", self)
+
+    def check_event_area(self, event):
+        "check if event is located inside the containers"
+        for zorder, c in reversed(
+            sorted(self._container_list, key=operator.itemgetter(0))
+        ):
+            b = c.check_event_area(event)
+            if b:
+                self.steal_event_lock()
+                return True
+        else:
+            self.restore_event_lock()
+
     def handle_event_n_draw(self, event):
+        event_inside = self.check_event_area(event)
+
+        if not event_inside:
+            return
+
         for zorder, c in reversed(
             sorted(self._container_list, key=operator.itemgetter(0))
         ):
@@ -242,7 +299,7 @@ class WidgetBoxManager:
 
     def save_n_draw(self, event):
         self.savebg(event)
-        self.draw_child_containers(event)
+        self.draw_child_containers(event, draw_foreign_widgets=False)
 
     def draw_widgets(self, event):
         if self.useblit:
@@ -251,7 +308,7 @@ class WidgetBoxManager:
                 self.draw_child_containers(event)
                 self.fig.canvas.blit(self.fig.bbox)
 
-    def draw_child_containers(self, event):
+    def draw_child_containers(self, event, draw_foreign_widgets=True):
         delayed_draws = []
         for zorder, c in self._container_list:
             _ = c.draw_widgets(event)
@@ -260,6 +317,11 @@ class WidgetBoxManager:
         renderer = event.canvas.get_renderer()
         for draw in delayed_draws:
             draw(renderer)
+
+        if draw_foreign_widgets:
+            for a in self._foreign_widgets:
+                a.purge_background()
+                a.draw(renderer)
 
     def get_named_status(self):
         status = {}
@@ -287,6 +349,12 @@ class WidgetBoxContainerBase:
             self._wb_list, key=operator.itemgetter(0), reverse=reverse
         ):
             yield zorder, wb
+
+    def check_event_area(self, event):
+        for zorder, wb in self.iter_wb_list():
+            b = wb.check_event_area(event)
+            if b:
+                return True
 
     def handle_event(self, event, parent=None):
         for zorder, wb in sorted(
@@ -446,6 +514,10 @@ class WidgetBoxBase:
 
     def get_artist(self):
         return self.box
+
+    def check_event_area(self, event):
+        bbox = self.box.patch.get_extents()
+        return bbox.contains(event.x, event.y)
 
     def wrap(self, widgets, dir="v"):
         if dir == "h":
