@@ -599,11 +599,13 @@ class AnchoredWidgetBox(WidgetBoxBase):
             )
             box = HPacker(children=[_pack], pad=0, sep=0)
 
-        wrapped = self._make_wrapped_widget_box(self.ax, box, **self._install_args)
+        wrapped = self._make_wrapped_widget_box(self.ax, box,
+                                                **self._install_args)
         return wrapped
 
     def _make_wrapped_widget_box(
-        self, ax, box, artist=None, xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1)
+        self, ax, box, artist=None,
+            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1)
     ):
         if artist is None:
             artist = ax

@@ -34,7 +34,7 @@ def test1():
 
     widgets = [
         Title("title0", "My Widgets"),
-        # Sub("sub1", "Sub", sub_widgets),
+        Sub("sub1", "Sub", sub_widgets, tooltip="Sub"),
         # Dropdown("dropdown", "Dropdown", ["123", "456"]),
         HWidgets(
             children=[
@@ -47,7 +47,7 @@ def test1():
         Radio("radio", ["Ag", "Bc"]),
         # Label("btn3", "-- Label --"),
         CheckBox("check", ["1", "2", "3"], title="Check"),
-        Button("btn1", "Click", centered=True),
+        Button("btn1", "Click", centered=True, tooltip="Tooltip"),
         HWidgets(children=[Button("btn2", "A"), Button("btn3", "B")]),
     ]
 

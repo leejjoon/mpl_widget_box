@@ -137,6 +137,9 @@ class BaseWidget(PaddedBox):
     def handle_motion_notify(self, event, parent=None):
         return None
 
+    def _get_tooltip_anchor(self):
+        return self.patch
+
     def create_tooltip(self, tooltip):
         box = TextArea(tooltip)
         xy = (0.5, 0)
@@ -145,7 +148,7 @@ class BaseWidget(PaddedBox):
             box,
             xy=xy,
             xybox=xybox,
-            xycoords=self.patch,
+            xycoords=self._get_tooltip_anchor(),
             boxcoords="offset points",
             box_alignment=(0.5, 1),
             pad=0.3,
@@ -280,36 +283,42 @@ class NamedWidget(BaseWidget):
         super().__init__(box, pad=pad, draw_frame=draw_frame, **kwargs)
 
 
-class Label(NamedWidget):
+class LabelBase(NamedWidget):
+    def __init__(self, wid, box, textbox=None,
+                 pad=None, draw_frame=True, auxinfo=None,
+                 **kwargs):
+        # self.label = label
+
+        if pad is None:
+            pad = 3
+
+        super().__init__(
+            wid, box, pad=pad, draw_frame=draw_frame,
+            auxinfo=auxinfo, **kwargs
+        )
+
+        self.box = box
+        self.textbox = textbox
+
+        self._update_patch(self.patch)
+
+    def get_label(self):
+        if self.textbox is not None:
+            return self.textbox.get_text()
+        else:
+            raise RuntimeError("no textbox is defined")
+
     def set_label(self, l):
-        self.box.set_text(l)
+        if self.textbox is not None:
+            self.textbox.set_text(l)
+        else:
+            raise RuntimeError("no textbox is defined")
 
     def _get_textprops(self):
         return {}
 
     def _update_patch(self, patch):
         patch.update(dict(ec="none"))
-
-    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None, **kwargs):
-
-        self.label = label
-
-        if pad is None:
-            pad = 3
-
-        if isinstance(label, str):
-            box = TextArea(label, textprops=self._get_textprops())
-        elif isinstance(label, OffsetBox):
-            box = label
-        else:
-            raise ValueError("incorrect label")
-        self.box = box
-
-        super().__init__(
-            wid, box, pad=pad, draw_frame=draw_frame, auxinfo=auxinfo, **kwargs
-        )
-
-        self._update_patch(self.patch)
 
     def get_status(self):
         return {}
@@ -332,6 +341,33 @@ class Label(NamedWidget):
         print("leaving")
 
 
+def _build_box_n_textbox(label, textprops):
+    if isinstance(label, str):
+        box = TextArea(label, textprops=textprops)
+        textbox = box
+    elif isinstance(label, OffsetBox):
+        box = label
+        textbox = None
+    else:
+        raise ValueError("incorrect label")
+
+    return box, textbox
+
+
+class Label(LabelBase):
+    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None,
+                 **kwargs):
+
+        box, textbox = _build_box_n_textbox(label, self._get_textprops())
+        LabelBase.__init__(self, wid, box, textbox=textbox,
+                 pad=pad, draw_frame=draw_frame, auxinfo=auxinfo,
+                 **kwargs)
+
+
+class ToggleButton(Label):
+    pass
+
+
 class Title(Label):
     def _get_textprops(self):
         return dict(weight="bold")
@@ -341,7 +377,7 @@ class Title(Label):
     #     # patch.update(dict(ec="none", fc="0.9"))
 
 
-class Button(Label):
+class Button(LabelBase):
     def _get_textprops(self):
         return dict(color="w")
 
@@ -350,6 +386,9 @@ class Button(Label):
 
     def get_event_area(self, renderer):
         return self.button_box.patch.get_window_extent()
+
+    def _get_tooltip_anchor(self):
+        return self.button_box.patch
 
     def __init__(
         self,
@@ -366,13 +405,7 @@ class Button(Label):
         self._context = ""
         self._contextual_themes = {} if contextual_themes is None else contextual_themes
 
-        if isinstance(label, str):
-            box = TextArea(label, textprops=self._get_textprops())
-        elif isinstance(label, OffsetBox):
-            box = label
-        else:
-            raise ValueError("incorrect label")
-        self.box = box
+        box, textbox = _build_box_n_textbox(label, self._get_textprops())
 
         if centered:
             self.button_box = Centered(box, pad=pad, draw_frame=draw_frame)
@@ -382,7 +415,9 @@ class Button(Label):
             )
 
         super().__init__(
-            wid, self.button_box, pad=3, draw_frame=False, expand=expand, **kwargs
+            wid, self.button_box,
+            textbox=textbox,
+            pad=3, draw_frame=False, expand=expand, **kwargs
         )
 
         patch = self.button_box.patch
@@ -452,8 +487,12 @@ class Button(Label):
         return super().draw_with_outer_bbox(renderer, outer_bbox)
 
 
-class Sub(Label):
-    def build_label(self, label, button_label):
+class Sub(LabelBase):
+    def _get_tooltip_anchor(self):
+        return self._button_label
+    # self.button_box.patch
+
+    def build_label(self, button_label):
         # button_label.set_text(label)
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
@@ -461,19 +500,21 @@ class Sub(Label):
                           textprops=dict(fontproperties=fontprop_solid,
                                          color="b"))
 
-        label = HPacker(children=[button_label, button], pad=1, sep=2, align="baseline")
+        label = HPacker(children=[button_label, button],
+                        pad=1, sep=2, align="baseline")
         return label
 
     def __init__(
         self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
     ):
 
-        if isinstance(label, str):
-            self._button_label = TextArea("")
-        else:
-            self._button_label = label
-        label_box = self.build_label(label, self._button_label)
-        super().__init__(wid, label_box, pad=pad, draw_frame=draw_frame, **kwargs)
+        box, textbox = _build_box_n_textbox(label, self._get_textprops())
+        self._button_label = box
+        label_box = self.build_label(self._button_label)
+
+        super().__init__(wid, label_box,
+                         textbox=textbox,
+                         pad=pad, draw_frame=draw_frame, **kwargs)
         self.patch.update(dict(ec="none", fc="#FFFFDD"))
 
         # self.set_popup_widgets(widgets)
@@ -514,7 +555,7 @@ class SelectableBase:
 
 
 class Dropdown(Sub, SelectableBase):
-    def build_label(self, label, button_label):
+    def build_label(self, button_label):
         # button_label.set_text(label)
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
@@ -733,7 +774,6 @@ class DropdownMenu(Radio):
 
     def _populate_buttons(self):
         SELECTED_ON = fontawesome.icons["angle-double-right"]
-        # SELECTED_OFF = fontawesome.icons["angle-double-right"]
         color = "red"
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
