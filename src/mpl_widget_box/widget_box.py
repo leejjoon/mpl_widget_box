@@ -158,7 +158,6 @@ class WidgetBoxManager:
             sticky = callback_info.get("sticky", True)
 
             if ax is None:
-                # print("ax is None, skip.")
                 return
 
             if wid in self._ephemeral_containers:
@@ -182,17 +181,13 @@ class WidgetBoxManager:
                 self._ephemeral_containers[wid] = c
 
         elif callback_info["command"] == "update_widget":
-            # print("update", callback_info)
             update_func = callback_info["update_func"]
             update_func(callback_info["value"])
             self.purge_ephemeral_containers(e)
 
     def purge_ephemeral_containers(self, event):
-        event_container = event.container_info.get("container", None) if event else None
-        # if event_container is not None:
-        #     print("## ancestor", event_container.get_ancestors())
-        # to_be_deleted = [(wid, c) for (wid, c) in self._ephemeral_containers.items()
-        #                  if (not c.sticky) or (event_container is not c)]
+        event_container = (event.container_info.get("container", None)
+                           if event else None)
         to_be_deleted = [
             (wid, c)
             for (wid, c) in self._ephemeral_containers.items()
@@ -217,28 +212,21 @@ class WidgetBoxManager:
         if lock.isowner(None):
             lock(self)
             self._stealed_lock = None
-            print("lock acquired")
         else:
             self._stealed_lock = lock._owner
             lock._owner = None
             lock(self)
-            print("lock stelaed", self._stealed_lock)
 
     def restore_event_lock(self):
         lock = self.fig.canvas.widgetlock
 
         if lock.isowner(self):
-            print("releasing the lock")
             lock.release(self)
-
-        # if self._stealed_lock is None:
-        #     return
 
         if self._stealed_lock is not None:
             # lock._owner = None
             lock(self._stealed_lock)
             self._stealed_lock = None
-            print("lock restored", self)
 
     def check_event_area(self, event):
         "check if event is located inside the containers"
@@ -294,7 +282,6 @@ class WidgetBoxManager:
             if e is not None and e.wid is not None:
                 if self._callback is not None:
                     status = self.get_named_status()
-                    # print(status)
                     self._callback(self, e, status)
 
         # if drawing is needed.
@@ -531,7 +518,6 @@ class WidgetBoxBase:
                 flattened_widgets.extend(w.get_child_widgets())
             else:
                 flattened_widgets.append(w)
-            # print(w)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
         self.box = self.wrap(_widgets, dir=dir)

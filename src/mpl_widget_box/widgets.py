@@ -252,9 +252,6 @@ class HWidgets(HPacker):
     def get_child_widgets(self):
         return self.get_children()
 
-    # def handle_event(self, event, parent=None):
-    #     print("OOO")
-
 
 class WidgetBoxEvent:
     def __init__(self, event, wid, auxinfo=None, callback_info=None):
@@ -324,21 +321,18 @@ class LabelBase(NamedWidget):
         return {}
 
     def handle_button_press(self, event, parent=None):
-        # print("pressed", self.label)
         return WidgetBoxEvent(event, None, auxinfo=self.auxinfo)
 
     def handle_motion_notify(self, event, parent=None):
         auxinfo = {}
         if self._mouse_on == False:
             self._mouse_on = True
-            print("entering")
             auxinfo["mouse_entered"] = True
 
         return MouseOverEvent(event, self.wid, self, auxinfo=auxinfo)
 
     def set_mouse_leave(self):
         self._mouse_on = False
-        print("leaving")
 
 
 def _build_box_n_textbox(label, textprops):
@@ -880,7 +874,6 @@ class ButtonBar(Radio):
         if tooltips is None:
             tooltips = []
 
-        print("tooltips", tooltips)
         for l, t in zip_longest(labels, tooltips, fillvalue=None):
             box = self.get_default_box(l, t)
             boxes.append(box)
@@ -919,7 +912,6 @@ class ButtonBar(Radio):
         # self.tooltips = tooltips
 
         self.boxes.extend(self.get_boxes(labels, tooltips))
-        print(self.boxes)
 
         kwargs = {}
         box = HPacker(children=self.boxes, pad=0, sep=3, **kwargs)
@@ -953,10 +945,3 @@ class ButtonBar(Radio):
         if b is not None:
             return b.handle_motion_notify(event, parent)
 
-        # auxinfo = {}
-        # if self._mouse_on == False:
-        #     self._mouse_on = True
-        #     print("entering")
-        #     auxinfo["mouse_entered"] = True
-
-        # return MouseOverEvent(event, self.wid, self, auxinfo=auxinfo)
