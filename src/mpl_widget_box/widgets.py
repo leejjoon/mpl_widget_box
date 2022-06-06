@@ -8,14 +8,21 @@ from matplotlib.offsetbox import (
     DrawingArea,
     TextArea,
     OffsetImage,
-    HPacker,
-    VPacker,
+    # HPacker,
+    # VPacker,
 )
+
+from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
 
 import fontawesomefree
 import fontawesome
 from pathlib import Path
 from matplotlib.font_manager import FontProperties
+
+from .event_handler import WidgetBoxEventHandlerBase
+
+from ._abc import PackedWidgetBase
+
 
 def get_icon_fontprop(family="solid", size=11):
     root = Path(fontawesomefree.__path__[0])
@@ -28,9 +35,6 @@ def get_icon_fontprop(family="solid", size=11):
 
     return fontprop
 
-from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
-
-from .event_handler import WidgetBoxEventHandlerBase
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 
@@ -243,7 +247,17 @@ class HPacker(DrawWithDelayed, _HPacker):
         return outer_bbox
 
 
-class HWidgets(HPacker):
+class HWidgets(PackedWidgetBase, HPacker):
+    def __init__(self, *kl, **kw):
+        pad = kw.pop("pad", 0)
+        sep = kw.pop("sep", 3)
+        super().__init__(*kl, pad=pad, sep=sep, **kw)
+
+    def get_child_widgets(self):
+        return self.get_children()
+
+
+class VWidgets(PackedWidgetBase, VPacker):
     def __init__(self, *kl, **kw):
         pad = kw.pop("pad", 0)
         sep = kw.pop("sep", 3)
@@ -484,10 +498,8 @@ class Button(LabelBase):
 class Sub(LabelBase):
     def _get_tooltip_anchor(self):
         return self._button_label
-    # self.button_box.patch
 
     def build_label(self, button_label):
-        # button_label.set_text(label)
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         button = TextArea(fontawesome.icons["plus"],
@@ -611,21 +623,6 @@ class Dropdown(Sub, SelectableBase):
     def get_status(self):
         return dict(value=self._button_label.get_text())
 
-    # def sub_selected(self, event, parent):
-    #     self.set_label(event.wid)
-    #     event.auxinfo.update(self.auxinfo)
-
-    # def _add_sub(self, parent):
-    #     if self.where == "selected":
-    #         a = self
-    #     else:
-    #         a = parent.box.offsetbox
-
-    #     print("ppp", parent)
-    #     parent.add_sub(a, self.widgets,
-    #                    self.sub_selected, sticky=False,
-    #                    xy=(0, 0), xybox=(0, 0))
-
 
 class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
     def _populate_buttons(self):
@@ -680,10 +677,6 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         else:
             self.boxes = []
             self._title_offset = 0
-        # box = HPacker(children=[self.button_off,
-        #                         TextArea(l)],
-        #               pad=1, sep=2,
-        #               align="baseline")
 
         self.values = values if values is not None else labels
 
@@ -890,26 +883,10 @@ class ButtonBar(Radio):
 
         self.wid = wid
 
-        # label_box = TextArea("Label:")
-
-        # if title is not None:
-        #     label_box = HPacker(children=[TextArea(title)],
-        #                         pad=1, sep=2,
-        #                         align="baseline")
-        #     self.boxes = [label_box]
-        #     self._title_offset = 1
-        # else:
-
         self.boxes = []
         self._title_offset = 0
 
-        # box = HPacker(children=[self.button_off,
-        #                         TextArea(l)],
-        #               pad=1, sep=2,
-        #               align="baseline")
-
         self.values = values if values is not None else labels
-        # self.tooltips = tooltips
 
         self.boxes.extend(self.get_boxes(labels, tooltips))
 

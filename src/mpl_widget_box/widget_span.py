@@ -123,13 +123,11 @@ class SpanSelectors(Span, CompositeWidget):
 
         self.selector = Radio(self._prefixed_name("sel"),
                               label_widgets,
-                              # [box, "Cont 1", "Cont 2"],
-                              # values=[0, 1, 2]),
-                              values=["line 1", "cont 1", "cont 2"])
+                              values=self.values)
 
         widgets = [
-            CheckBox(self._prefixed_name("edit"),
-                     ["Show & Edit"], values=["edit"]),
+            # CheckBox(self._prefixed_name("edit"),
+            #          ["Show & Edit"], values=["edit"]),
             self.selector,
             HWidgets(children=[Button(self._prefixed_name("store"),
                                       "Store"),
@@ -139,29 +137,44 @@ class SpanSelectors(Span, CompositeWidget):
 
         return widgets
 
+    # FIXME: with the recent change, the 'post_install' method is not much
+    # relevant anymore as this is triggered right after the 'build_widgets'
+    # method. We leave it as is for now.
     def post_install(self, wbm):
         wbm._foreign_widgets.append(self.span_selection_bars)
         wbm._foreign_widgets.append(self)
+        self.initailize()
+
+        for i, v in enumerate(self.values):
+            x1, x2 = self.extents_dict.get(v, (None, None))
+            self._update_selector_label(i, x1, x2)
+
+    def post_uninstall(self, wbm):
+        wbm._foreign_widgets.remove(self.span_selection_bars)
+        wbm._foreign_widgets.remove(self)
+        self.clear()
+
+    def initailize(self):
+        self.select()
+        # sel = self._prefixed_name("sel")
+
+        s = self.selector.get_status()
+
+        saved_extent = self.extents_dict.get(s["value"],
+                                             (0, 0))
+        self.set_current_extents(saved_extent)
 
     def process_event(self, wb, ev, status):
-        if ev.wid in [self._prefixed_name("edit"),
-                      self._prefixed_name("sel")]:
-            if "edit" in status[self._prefixed_name("edit")]["values"]:
-                self.select()
-                sel = self._prefixed_name("sel")
-                saved_extent = self.extents_dict.get(status[sel]["value"],
-                                                     (0, 0))
-                #if saved_extent is not None:
-                self.set_current_extents(saved_extent)
-                # canvas = span.span.ax.figure.canvas
-                # canvas.draw_idle()
-            else:
-                self.clear()
-        # elif ev.wid == "sel":
+
+        if ev.wid in [self._prefixed_name("sel")]:
+            # if "edit" in status[self._prefixed_name("edit")]["values"]:
+            self.initailize()
 
         elif ev.wid == self._prefixed_name("store"):
             sel = self._prefixed_name("sel")
             x1, x2 = self.get_current_extents()
+            if (x1, x2) == (0, 0):
+                return
             self.extents_dict[status[sel]["value"]] = x1, x2
             i = status[sel]["selected"][0]
             self._update_selector_label(i, x1, x2)

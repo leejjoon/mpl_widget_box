@@ -18,7 +18,7 @@ from matplotlib.offsetbox import (
 )
 
 from .widgets import MouseOverEvent
-from .widgets import HPacker, VPacker, HWidgets
+from .widgets import HPacker, VPacker, HWidgets, PackedWidgetBase
 from .composite_widget import CompositeWidget
 
 from .event_handler import WidgetsEventHandler
@@ -102,6 +102,7 @@ class WidgetBoxManager:
         )
 
         self.add_container(wc, zorder=zorder)
+        return wc
 
     def add_sub_widget_box(
         self,
@@ -400,11 +401,15 @@ class WidgetBoxContainerBase:
 
     def install(self, wbm):
         for zorder, wb in self.iter_wb_list():
+            wb.init_widgets()
             wb.trigger_post_install_hooks(wbm)
 
         self._installed = True
 
-    def uninstall(self):
+    def uninstall(self, wbm):
+        for zorder, wb in self.iter_wb_list():
+            wb.trigger_post_uninstall_hooks(wbm)
+
         self._installed = False
 
     def installed(self):
@@ -429,21 +434,33 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
         self._cached_widgets = None
 
+    def get_widget_box(self):
+        return self._wb_list[0][-1]
+
     def get_draw_widget_method(self):
         return self.ax.draw_artist
 
     def install(self, wbm):
 
+        super().install(wbm)
+
         for zorder, wb in self.iter_wb_list():
             self.ax.add_artist(wb.get_artist())
 
-        super().install(wbm)
-
         return self
 
-    def uninstall(self):
-        super().uninstall()
+    def uninstall(self, wbm):
+        super().uninstall(wbm)
         self.ax = None
+
+    def reinit_widget_box(self, wbm, wb, widgets):
+        assert wb in [_wb for _, _wb in self._wb_list]
+
+        wb.trigger_post_uninstall_hooks(wbm)
+        self.ax.artists.remove(wb.get_artist())
+        wb.init_widgets(widgets)
+        self.ax.add_artist(wb.get_artist())
+        wb.trigger_post_install_hooks(wbm)
 
 
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
@@ -498,29 +515,47 @@ class SubGuiBox(AnchoredWidgetContainer):
 
 # WidgetBox should contain a single box
 class WidgetBoxBase:
+    @classmethod
+    def _get_flattened_widgets(cls, widgets):
+        flattened_widgets = []
+        for w in widgets:
+            if isinstance(w, PackedWidgetBase):
+                child_widgets = w.get_child_widgets()
+                new_widgets = cls._get_flattened_widgets(child_widgets)
+                flattened_widgets.extend(new_widgets)
+            else:
+                flattened_widgets.append(w)
+
+        return flattened_widgets
+
     def __init__(self, widgets, dir="v"):
 
         self.widgets_orig = widgets
+
         self._post_install_hook = []
+        self._post_uninstall_hook = []
+
+        self.dir = dir
+
+    def init_widgets(self, widgets=None):
+
+        widgets = widgets or self.widgets_orig
 
         _widgets = []
         for w in widgets:
             if isinstance(w, CompositeWidget):
                 _widgets.extend(w.build_widgets())
                 self._post_install_hook.append(w.post_install)
+                self._post_uninstall_hook.append(w.post_uninstall)
             else:
                 _widgets.append(w)
 
         self._widgets = _widgets
-        flattened_widgets = []  # self._widgets
-        for w in self._widgets:
-            if isinstance(w, HWidgets):
-                flattened_widgets.extend(w.get_child_widgets())
-            else:
-                flattened_widgets.append(w)
+
+        flattened_widgets = self._get_flattened_widgets(self._widgets)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
-        self.box = self.wrap(_widgets, dir=dir)
+        self.box = self.wrap(_widgets, dir=self.dir)
 
     def get_artist(self):
         return self.box
@@ -576,8 +611,18 @@ class WidgetBoxBase:
         return self.box.draw(renderer)
 
     def trigger_post_install_hooks(self, wbm):
-        for cb in self._post_install_hook:
+        while self._post_install_hook:
+            cb = self._post_install_hook.pop()
             cb(wbm)
+        # for cb in self._post_install_hook:
+        #     cb(wbm)
+
+    def trigger_post_uninstall_hooks(self, wbm):
+        while self._post_uninstall_hook:
+            cb = self._post_uninstall_hook.pop()
+            cb(wbm)
+        # for cb in self._post_uninstall_hook:
+        #     cb(wbm)
 
 
 class AnchoredWidgetBox(WidgetBoxBase):
