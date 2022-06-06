@@ -19,8 +19,12 @@ from matplotlib.offsetbox import (
 
 from .widgets import MouseOverEvent
 from .widgets import HPacker, VPacker, HWidgets
+from .composite_widget import CompositeWidget
 
 from .event_handler import WidgetsEventHandler
+
+from typing import List
+from .foreign_widget_protocol import ForeignWidgetProtocol
 
 
 class AnnotationBbox(_AnnotationBbox):
@@ -57,9 +61,12 @@ class WidgetBoxManager:
         self._ephemeral_containers = {}
 
         self._mouse_owner = None
-        self._foreign_widgets = []
+        self._foreign_widgets : List[ForeignWidgetProtocol] = []
 
         self._stealed_lock = None
+
+    def add_foreign_widget(self, w: ForeignWidgetProtocol):
+        self._foreign_widgets.append(w)
 
     def set_callback(self, callback):
         self._callback = callback
@@ -114,7 +121,7 @@ class WidgetBoxManager:
 
         self.add_container(sub, zorder=zorder)
 
-        sub.install()
+        sub.install(self)
 
         return sub
 
@@ -122,7 +129,7 @@ class WidgetBoxManager:
 
         for zorder, wc in self._container_list:
             if not wc.installed():
-                wc.install()
+                wc.install(self)
 
         cid = self.fig.canvas.mpl_connect(
             "button_press_event", self.handle_event_n_draw
@@ -136,6 +143,8 @@ class WidgetBoxManager:
 
         cid = self.fig.canvas.mpl_connect("draw_event", self.save_n_draw)
         self._cid_list["draw_event"] = cid
+
+        self.fig.canvas.draw_idle()
 
     def handle_callback(self, event, e):
         wid = e.wid
@@ -299,7 +308,8 @@ class WidgetBoxManager:
 
     def save_n_draw(self, event):
         self.savebg(event)
-        self.draw_child_containers(event, draw_foreign_widgets=False)
+        # self.draw_child_containers(event, draw_foreign_widgets=False)
+        self.draw_child_containers(event, draw_foreign_widgets=True)
 
     def draw_widgets(self, event):
         if self.useblit:
@@ -401,7 +411,10 @@ class WidgetBoxContainerBase:
     def draw_container(self, event):
         pass
 
-    def install(self):
+    def install(self, wbm):
+        for zorder, wb in self.iter_wb_list():
+            wb.trigger_post_install_hooks(wbm)
+
         self._installed = True
 
     def uninstall(self):
@@ -432,12 +445,12 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
     def get_draw_widget_method(self):
         return self.ax.draw_artist
 
-    def install(self):
+    def install(self, wbm):
 
         for zorder, wb in self.iter_wb_list():
             self.ax.add_artist(wb.get_artist())
 
-        super().install()
+        super().install(wbm)
 
         return self
 
@@ -500,7 +513,18 @@ class SubGuiBox(AnchoredWidgetContainer):
 class WidgetBoxBase:
     def __init__(self, widgets, dir="v"):
 
-        self._widgets = widgets
+        self.widgets_orig = widgets
+        self._post_install_hook = []
+
+        _widgets = []
+        for w in widgets:
+            if isinstance(w, CompositeWidget):
+                _widgets.extend(w.build_widgets())
+                self._post_install_hook.append(w.post_install)
+            else:
+                _widgets.append(w)
+
+        self._widgets = _widgets
         flattened_widgets = []  # self._widgets
         for w in self._widgets:
             if isinstance(w, HWidgets):
@@ -510,7 +534,7 @@ class WidgetBoxBase:
             # print(w)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
-        self.box = self.wrap(widgets, dir=dir)
+        self.box = self.wrap(_widgets, dir=dir)
 
     def get_artist(self):
         return self.box
@@ -564,6 +588,10 @@ class WidgetBoxBase:
     def draw_widgets(self, event, draw_method):
         renderer = event.canvas.get_renderer()
         return self.box.draw(renderer)
+
+    def trigger_post_install_hooks(self, wbm):
+        for cb in self._post_install_hook:
+            cb(wbm)
 
 
 class AnchoredWidgetBox(WidgetBoxBase):
