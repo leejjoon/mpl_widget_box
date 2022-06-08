@@ -308,15 +308,20 @@ class WidgetBoxManager:
 
     def draw_child_containers(self, event, draw_foreign_widgets=True):
         delayed_draws = []
+        to_be_removed = []
         for zorder, c in self._container_list:
-            # check if c.ax is still in fig.
+            # check if c.ax is still in the figure and uninstall if not.
             if (isinstance(c, AxesWidgetBoxContainer) and
                 c.ax not in self.fig.axes):
                 c.uninstall(self)
+                to_be_removed.append((zorder, c))
                 continue
 
             _ = c.draw_widgets(event)
             delayed_draws.extend(_ or [])
+
+        for zc in to_be_removed:
+            self._container_list.remove(zc)
 
         renderer = event.canvas.get_renderer()
         for draw in delayed_draws:
