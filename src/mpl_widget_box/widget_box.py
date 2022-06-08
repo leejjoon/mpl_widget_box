@@ -309,6 +309,12 @@ class WidgetBoxManager:
     def draw_child_containers(self, event, draw_foreign_widgets=True):
         delayed_draws = []
         for zorder, c in self._container_list:
+            # check if c.ax is still in fig.
+            if (isinstance(c, AxesWidgetBoxContainer) and
+                c.ax not in self.fig.axes):
+                c.uninstall(self)
+                continue
+
             _ = c.draw_widgets(event)
             delayed_draws.extend(_ or [])
 
@@ -316,6 +322,7 @@ class WidgetBoxManager:
         for draw in delayed_draws:
             draw(renderer)
 
+        # foreign widgets may need to be an attribute of axes.
         if draw_foreign_widgets:
             for a in self._foreign_widgets:
                 a.purge_background()
