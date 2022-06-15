@@ -12,10 +12,10 @@ from matplotlib.offsetbox import (
     AnnotationBbox
 )
 
-
-from matplotlib.widgets import (Button, RadioButtons as _RadioButtons,
-                                CheckButtons,
-                                TextBox)
+from matplotlib.widgets import (AxesWidget,
+                               Button, RadioButtons as _RadioButtons,
+                               CheckButtons,
+                               TextBox)
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.text import Text
@@ -23,7 +23,6 @@ import matplotlib.patheffects as path_effects
 
 from matplotlib.tight_layout import get_renderer
 
-from matplotlib.widgets import AxesWidget
 
 
 def ignore(self, event):
@@ -292,31 +291,16 @@ class GuiBox():
         return text_box
 
 
-# class AnchoredGuiBoxSimple(AnchoredOffsetbox):
-#     def __init__(self, fig, ax, *kl, **kw):
-#         self.gui = GuiBox(fig, ax, *kl, **kw)
-#         self.gui_visible = True
-
-#         AnchoredOffsetbox.__init__(self, loc=2,
-#                                    child=self.gui.pack, pad=0.,
-#                                    frameon=False,
-#                                    bbox_to_anchor=(0.0, 0, 1, 1.),
-#                                    bbox_transform=ax.transAxes,
-#                                    borderpad=0.5)
-
-#     def _trigger_redraw(self):
-#         self.figure.canvas.draw()
-
-
 class AnnotationdGuiBoxSimple(AnnotationBbox):
-    def __init__(self, fig, ax, *kl, **kw):
+    def __init__(self, fig, ax, artist=None,
+                 xy=(0.5, 0.5), xybox=(0, 0),
+                 box_alignment=(0.5, 0.5), *kl, **kw):
+
         self.gui = GuiBox(fig, ax, *kl, **kw)
         self.gui_visible = True
 
-        xy=(0.5, 0.5)
-        xybox=(0, 0)
-        box_alignment=(0.5, 0.5)
-        artist = ax
+        if artist is None:
+            artist = ax
 
         AnnotationBbox.__init__(
             self,

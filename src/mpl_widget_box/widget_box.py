@@ -16,6 +16,7 @@ from matplotlib.offsetbox import (
     TextArea,
     OffsetImage,
 )
+import numpy as np
 
 from .widgets import MouseOverEvent
 from .widgets import HPacker, VPacker, HWidgets, PackedWidgetBase
@@ -83,22 +84,54 @@ class WidgetBoxManager:
 
         self._container_list.remove((z, c))
 
-    def add_anchored_widget_box(self, widgets, ax, loc=2, dir="v", zorder=0):
+    def add_anchored_widget_box(self, widgets, ax, loc=2, dir="v", zorder=0,
+                                box_alignment=None,
+                                bbox_to_anchor=None, pad=10):
 
-        if loc == 2:
-            xy = (0, 1)
-            xybox = (10, -10)
-        else:
-            xy = (0, 1)
-            xybox = (10, -10)
+        # xy, box_alignment, pad
+        coefs = {'center':  (0.5, 0.5),
+                 'lower left': (0, 0),
+                 'lower center':  (0.5, 0),
+                 'lower right': (1.0, 0),
+                 'center right':  (1.0, 0.5),
+                 'upper right': (1.0, 1.0),
+                 'upper center':  (0.5, 1.0),
+                 'upper left': (0, 1.0),
+                 'center right':  (0, 0.5)}
+
+        loc_code = {1: "upper right",
+                    2: "upper left",
+                    3: "lower left",
+                    4: "lower right",
+                    5: "right",
+                    6: "center left",
+                    7: "center right",
+                    8: "lower center",
+                    9: "upper center",
+                    10: "center"}
+
+        # change integer loc to string.
+        loc = loc_code.get(loc, loc)
+        xy = coefs.get(loc)
+        box_alignment = xy if box_alignment is None else box_alignment
+        from collections import Sequence
+        _padx, _pady = pad if isinstance(pad, Sequence) else (pad, pad)
+        padx = np.sign(0.5 - xy[0]) * _padx
+        pady = np.sign(0.5 - xy[1]) * _pady
+
+        # loc = 5 and 7 have a same effects. See the matplotlib.legend manual.
+
+        xybox = padx, pady
 
         wc = AnchoredWidgetContainer(
             widgets,
             ax,
             xy=xy,
             xybox=xybox,
+            box_alignment=box_alignment,
             # install_args=install_args
             dir=dir,
+            bbox_to_anchor=bbox_to_anchor,
         )
 
         self.add_container(wc, zorder=zorder)
@@ -340,8 +373,15 @@ class WidgetBoxManager:
 
         return status
 
+    def draw_idle(self):
+        self.fig.canvas.draw_idle()
 
-# containers can have multiple widget_boxes.
+    def get_widget_by_id(self, wid):
+        for zorder, c in self._container_list:
+            w = c.get_widget_by_id(wid)
+            if w is not None: return w
+
+    # containers can have multiple widget_boxes.
 
 
 class WidgetBoxContainerBase:
@@ -359,6 +399,11 @@ class WidgetBoxContainerBase:
             self._wb_list, key=operator.itemgetter(0), reverse=reverse
         ):
             yield zorder, wb
+
+    def get_widget_by_id(self, wid):
+        for zorder, wb in self.iter_wb_list():
+            w = wb.get_widget_by_id(wid)
+            if w is not None: return w
 
     def check_event_area(self, event):
         for zorder, wb in self.iter_wb_list():
@@ -476,19 +521,26 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
 
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
-    def __init__(self, widgets, ax, artist=None, xy=(0, 1), xybox=(0, 0), dir="v"):
+    def __init__(self, widgets, ax, bbox_to_anchor=None,
+                 xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+                 dir="v"):
 
         widget_box = self._make_widget_box(
-            widgets, ax, artist=artist, xy=xy, xybox=xybox, dir=dir
+            widgets, ax, bbox_to_anchor=bbox_to_anchor,
+            xy=xy, xybox=xybox, box_alignment=box_alignment,
+            dir=dir
         )
         super().__init__(widget_box, ax)
 
     def _make_widget_box(
-        self, widgets, ax, artist=None, xy=(0, 1), xybox=(0, 0), dir="v"
+        self, widgets, ax, bbox_to_anchor=None,
+            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+            dir="v"
     ):
 
         _widget_box = AnchoredWidgetBox(
-            widgets, ax, artist=artist, xy=xy, xybox=xybox, dir=dir
+            widgets, ax, bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
+            box_alignment=box_alignment , dir=dir
         )
 
         return _widget_box
@@ -548,6 +600,8 @@ class WidgetBoxBase:
         self._post_uninstall_hook = []
 
         self.dir = dir
+
+        self.init_widgets()
 
     def init_widgets(self, widgets=None):
 
@@ -636,13 +690,18 @@ class WidgetBoxBase:
         # for cb in self._post_uninstall_hook:
         #     cb(wbm)
 
+    def get_widget_by_id(self, wid):
+        for w in self._handler.get_child_widgets():
+            if w.wid == wid:
+                return w
+
 
 class AnchoredWidgetBox(WidgetBoxBase):
     def __init__(
         self,
         widgets,
         ax,
-        artist=None,
+        bbox_to_anchor=None,
         xy=(0, 1),
         xybox=(0, 0),
         box_alignment=(0, 1),
@@ -650,7 +709,8 @@ class AnchoredWidgetBox(WidgetBoxBase):
     ):
 
         install_args = dict(
-            artist=artist, xy=xy, xybox=xybox, box_alignment=box_alignment
+            bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
+            box_alignment=box_alignment
         )
 
         self._install_args = install_args
@@ -675,17 +735,17 @@ class AnchoredWidgetBox(WidgetBoxBase):
         return wrapped
 
     def _make_wrapped_widget_box(
-        self, ax, box, artist=None,
+        self, ax, box, bbox_to_anchor=None,
             xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1)
     ):
-        if artist is None:
-            artist = ax
+        if bbox_to_anchor is None:
+            bbox_to_anchor = ax
 
         wrapped_box = AnnotationBbox(
             box,
             xy=xy,
             xybox=xybox,
-            xycoords=artist,
+            xycoords=bbox_to_anchor,
             boxcoords="offset points",
             box_alignment=box_alignment,
             pad=0.3,

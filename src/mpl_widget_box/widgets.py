@@ -248,20 +248,22 @@ class HPacker(DrawWithDelayed, _HPacker):
 
 
 class HWidgets(PackedWidgetBase, HPacker):
-    def __init__(self, *kl, **kw):
+    def __init__(self, children, *kl, **kw):
         pad = kw.pop("pad", 0)
         sep = kw.pop("sep", 3)
-        super().__init__(*kl, pad=pad, sep=sep, **kw)
+        super().__init__(*kl, children=children,
+                         pad=pad, sep=sep, **kw)
 
     def get_child_widgets(self):
         return self.get_children()
 
 
 class VWidgets(PackedWidgetBase, VPacker):
-    def __init__(self, *kl, **kw):
+    def __init__(self, children, *kl, **kw):
         pad = kw.pop("pad", 0)
         sep = kw.pop("sep", 3)
-        super().__init__(*kl, pad=pad, sep=sep, **kw)
+        super().__init__(*kl, children=children,
+                         pad=pad, sep=sep, **kw)
 
     def get_child_widgets(self):
         return self.get_children()
@@ -657,11 +659,11 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
         return box
 
-    def get_initial_selected(self, selected):
-        selected = [0] if selected is None else [selected]
-        return selected
+    def get_initial_selected(self, selected=None):
+        return 0 if selected is None else selected
 
-    def __init__(self, wid, labels, selected=None, values=None, title=None, pad=3):
+    def __init__(self, wid, labels, selected=None, values=None,
+                 title=None, pad=3):
         self.selected = self.get_initial_selected(selected)
         self._populate_buttons()
 
@@ -707,8 +709,14 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.patch.update(dict(ec="#AAEEEE", fc="#EEFFFF"))
 
     def select(self, i):
+        """
+        if i is larger than len(values) or smaller than 0, it will
+        automatically wrapped around.
+        """
         if i is None:
             i = 0
+
+        i = i % len(self.values)
 
         o = self._title_offset
 
@@ -718,7 +726,10 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
             else:
                 b.get_children()[0] = self.button_off
 
-        self.selected[:] = [i]
+        # self.selected[:] = [i]
+        self.selected = i
+
+        return i
 
     def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
@@ -731,7 +742,7 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         return WidgetBoxEvent(event, self.wid, dict(lid=i, widget=b))
 
     def get_status(self):
-        return dict(selected=self.selected, value=self.values[self.selected[0]])
+        return dict(selected=self.selected, value=self.values[self.selected])
 
 
 class DropdownMenu(Radio):
