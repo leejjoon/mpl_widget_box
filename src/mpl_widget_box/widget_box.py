@@ -140,19 +140,20 @@ class WidgetBoxManager:
         return wc
 
     def add_sub_widget_box(
-        self,
-        widgets,
-        ax,
-        sticky=True,
-        artist=None,
-        xy=(1, 1),
-        xybox=(10, -10),
-        parent=None,
-        zorder=0,
+            self,
+            widgets,
+            ax,
+            sticky=True,
+            bbox_to_anchor=None,
+            xy=(1, 1),
+            xybox=(10, -10),
+            parent=None,
+            zorder=0,
     ):
 
         sub = SubGuiBox(
-            widgets, ax, artist=artist, xy=xy, xybox=xybox, sticky=sticky, parent=parent
+            widgets, ax, bbox_to_anchor=bbox_to_anchor,
+            xy=xy, xybox=xybox, sticky=sticky, parent=parent
         )
 
         self.add_container(sub, zorder=zorder)
@@ -206,7 +207,7 @@ class WidgetBoxManager:
                 c = self.add_sub_widget_box(
                     widgets,
                     ax,
-                    artist=a,
+                    bbox_to_anchor=a,
                     sticky=sticky,
                     # xy=(1, 1), xybox=(10, -10),
                     xy=xy,
@@ -512,8 +513,9 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
         super().uninstall(wbm)
         self.ax = None
 
-    def reinit_widget_box(self, wbm, wb, widgets):
-        assert wb in [_wb for _, _wb in self._wb_list]
+    def reinit_widget_box(self, wbm, widgets):
+        wb = self.get_widget_box()
+        # assert wb in [_wb for _, _wb in self._wb_list]
 
         wb.trigger_post_uninstall_hooks(wbm)
         self.ax.artists.remove(wb.get_artist())
@@ -556,13 +558,14 @@ class SubGuiBox(AnchoredWidgetContainer):
         self,
         widgets,
         ax,
-        artist=None,
+        bbox_to_anchor=None,
         xy=(0, 1),
         xybox=(0, 0),
         parent=None,
         sticky=True,
     ):
-        super().__init__(widgets, ax, artist=artist, xy=xy, xybox=xybox)
+        super().__init__(widgets, ax,
+                         bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox)
 
         # sticky for only for event from the same container.
         self.sticky = sticky

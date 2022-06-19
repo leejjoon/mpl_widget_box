@@ -590,7 +590,8 @@ class Dropdown(Sub, SelectableBase):
         return menu
 
     def __init__(
-        self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
+        self, wid, label, widgets, pad=None, draw_frame=True,
+            where="selected", **kwargs
     ):
 
         super().__init__(
@@ -851,8 +852,8 @@ class ButtonBar(Radio):
     def get_default_box(self, l, tooltip=None):
 
         contextual_themes = {
-            "selected": dict(fc="#F44336"),
-            "selected-hover": dict(fc="#F44336"),
+            "selected": dict(fc="#62eeee"),
+            "selected-hover": dict(fc="#62cccc"),
             "default": dict(fc="w"),
         }
 
@@ -922,7 +923,7 @@ class ButtonBar(Radio):
             else:
                 b.set_context("")
 
-        self.selected[:] = [i]
+        self.selected = i
 
     def _set_figure_extra(self, fig):
         pass
