@@ -86,7 +86,8 @@ class WidgetBoxManager:
 
     def add_anchored_widget_box(self, widgets, ax, loc=2, dir="v", zorder=0,
                                 box_alignment=None,
-                                bbox_to_anchor=None, pad=10):
+                                bbox_to_anchor=None, pad=10,
+                                frameon=True):
 
         # xy, box_alignment, pad
         coefs = {'center':  (0.5, 0.5),
@@ -132,6 +133,7 @@ class WidgetBoxManager:
             # install_args=install_args
             dir=dir,
             bbox_to_anchor=bbox_to_anchor,
+            frameon=frameon
         )
 
         self.add_container(wc, zorder=zorder)
@@ -523,24 +525,27 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
     def __init__(self, widgets, ax, bbox_to_anchor=None,
                  xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+                 frameon=True,
                  dir="v"):
 
         widget_box = self._make_widget_box(
             widgets, ax, bbox_to_anchor=bbox_to_anchor,
             xy=xy, xybox=xybox, box_alignment=box_alignment,
-            dir=dir
+            dir=dir, frameon=frameon
         )
         super().__init__(widget_box, ax)
 
     def _make_widget_box(
         self, widgets, ax, bbox_to_anchor=None,
             xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+            frameon=True,
             dir="v"
     ):
 
         _widget_box = AnchoredWidgetBox(
             widgets, ax, bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
-            box_alignment=box_alignment , dir=dir
+            box_alignment=box_alignment , dir=dir,
+            frameon=frameon
         )
 
         return _widget_box
@@ -698,19 +703,21 @@ class WidgetBoxBase:
 
 class AnchoredWidgetBox(WidgetBoxBase):
     def __init__(
-        self,
-        widgets,
-        ax,
-        bbox_to_anchor=None,
-        xy=(0, 1),
-        xybox=(0, 0),
-        box_alignment=(0, 1),
-        dir="v",
+            self,
+            widgets,
+            ax,
+            bbox_to_anchor=None,
+            xy=(0, 1),
+            xybox=(0, 0),
+            box_alignment=(0, 1),
+            frameon=True,
+            dir="v",
     ):
 
         install_args = dict(
             bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
-            box_alignment=box_alignment
+            box_alignment=box_alignment,
+            frameon=frameon
         )
 
         self._install_args = install_args
@@ -736,7 +743,8 @@ class AnchoredWidgetBox(WidgetBoxBase):
 
     def _make_wrapped_widget_box(
         self, ax, box, bbox_to_anchor=None,
-            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1)
+            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
+            frameon=True
     ):
         if bbox_to_anchor is None:
             bbox_to_anchor = ax
@@ -750,5 +758,6 @@ class AnchoredWidgetBox(WidgetBoxBase):
             box_alignment=box_alignment,
             pad=0.3,
             animated=True,
+            frameon=frameon,
         )
         return wrapped_box
