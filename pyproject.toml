@@ -7,19 +7,13 @@ license = "BSD"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-matplotlib = "^3.5.1"
-numpy = "^1.22.3"
+matplotlib = "^3.5.2"
 fontawesome = "^5.10.1"
-fontawesomefree = "^6.1.1"
+rapidyaml = "^0.4.1"
 
 [tool.poetry.dev-dependencies]
-jupyter = "^1.0.0"
-ipython = "^8.2.0"
-poetry2setup = "^1.0.0"
-pytest = "^7.1.2"
-nox = "^2022.1.7"
+ipython = "^8.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
