@@ -20,11 +20,10 @@ from matplotlib.font_manager import FontProperties
 from .event_handler import WidgetBoxEventHandlerBase
 
 from ._abc import PackedWidgetBase
-from .fa_helper import FontAwesome as fontawesome
-from .fa_helper import FontAwesome as fontawesome
 
-get_icon_fontprop = fontawesome.get_fontprop
-
+from .fa_helper import FontAwesome
+fa_icons = FontAwesome.icons
+get_icon_fontprop = FontAwesome.get_fontprop
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 
@@ -494,7 +493,7 @@ class Sub(LabelBase):
     def build_label(self, button_label):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
-        button = TextArea(fontawesome.icons["plus"],
+        button = TextArea(fa_icons["plus"],
                           textprops=dict(fontproperties=fontprop_solid,
                                          color="b"))
 
@@ -558,7 +557,7 @@ class Dropdown(Sub, SelectableBase):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         # fontprop_regular = get_icon_fontprop(family="regular", size=10)
-        button = TextArea(fontawesome.icons["caret-down"],
+        button = TextArea(fa_icons["caret-down"],
                           textprops=dict(fontproperties=fontprop_solid,
                                          color="red"))
 
@@ -619,8 +618,8 @@ class Dropdown(Sub, SelectableBase):
 
 class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
     def _populate_buttons(self):
-        SELECTED_ON = fontawesome.icons["circle-dot"]
-        SELECTED_OFF = fontawesome.icons["circle"]
+        SELECTED_ON = fa_icons["circle-dot"]
+        SELECTED_OFF = fa_icons["circle"]
         color = "blue"
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
@@ -762,7 +761,7 @@ class DropdownMenu(Radio):
         # self.patch.update(dict(ec="#AAEEEE", fc="#EEFFFF"))
 
     def _populate_buttons(self):
-        SELECTED_ON = fontawesome.icons["angles-right"]
+        SELECTED_ON = fa_icons["angles-right"]
         color = "red"
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
@@ -801,8 +800,8 @@ class CheckBox(Radio):
     # button_off = OffsetImage(ff[8]["check_button_off"])
 
     def _populate_buttons(self):
-        SELECTED_ON = fontawesome.icons["square-check"]
-        SELECTED_OFF = fontawesome.icons["square"]
+        SELECTED_ON = fa_icons["square-check"]
+        SELECTED_OFF = fa_icons["square"]
         color = "blue"
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
