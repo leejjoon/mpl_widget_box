@@ -22,6 +22,7 @@ from .event_handler import WidgetBoxEventHandlerBase
 from ._abc import PackedWidgetBase
 
 from .fa_helper import FontAwesome
+
 fa_icons = FontAwesome.icons
 get_icon_fontprop = FontAwesome.get_fontprop
 
@@ -240,8 +241,7 @@ class HWidgets(PackedWidgetBase, HPacker):
     def __init__(self, children, *kl, **kw):
         pad = kw.pop("pad", 0)
         sep = kw.pop("sep", 3)
-        super().__init__(*kl, children=children,
-                         pad=pad, sep=sep, **kw)
+        super().__init__(*kl, children=children, pad=pad, sep=sep, **kw)
 
     def get_child_widgets(self):
         return self.get_children()
@@ -251,8 +251,7 @@ class VWidgets(PackedWidgetBase, VPacker):
     def __init__(self, children, *kl, **kw):
         pad = kw.pop("pad", 0)
         sep = kw.pop("sep", 3)
-        super().__init__(*kl, children=children,
-                         pad=pad, sep=sep, **kw)
+        super().__init__(*kl, children=children, pad=pad, sep=sep, **kw)
 
     def get_child_widgets(self):
         return self.get_children()
@@ -286,17 +285,16 @@ class NamedWidget(BaseWidget):
 
 
 class LabelBase(NamedWidget):
-    def __init__(self, wid, box, textbox=None,
-                 pad=None, draw_frame=True, auxinfo=None,
-                 **kwargs):
+    def __init__(
+        self, wid, box, textbox=None, pad=None, draw_frame=True, auxinfo=None, **kwargs
+    ):
         # self.label = label
 
         if pad is None:
             pad = 3
 
         super().__init__(
-            wid, box, pad=pad, draw_frame=draw_frame,
-            auxinfo=auxinfo, **kwargs
+            wid, box, pad=pad, draw_frame=draw_frame, auxinfo=auxinfo, **kwargs
         )
 
         self.box = box
@@ -354,13 +352,19 @@ def _build_box_n_textbox(label, textprops):
 
 
 class Label(LabelBase):
-    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None,
-                 **kwargs):
+    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None, **kwargs):
 
         box, textbox = _build_box_n_textbox(label, self._get_textprops())
-        LabelBase.__init__(self, wid, box, textbox=textbox,
-                 pad=pad, draw_frame=draw_frame, auxinfo=auxinfo,
-                 **kwargs)
+        LabelBase.__init__(
+            self,
+            wid,
+            box,
+            textbox=textbox,
+            pad=pad,
+            draw_frame=draw_frame,
+            auxinfo=auxinfo,
+            **kwargs,
+        )
 
 
 class ToggleButton(Label):
@@ -414,9 +418,13 @@ class Button(LabelBase):
             )
 
         super().__init__(
-            wid, self.button_box,
+            wid,
+            self.button_box,
             textbox=textbox,
-            pad=3, draw_frame=False, expand=expand, **kwargs
+            pad=3,
+            draw_frame=False,
+            expand=expand,
+            **kwargs,
         )
 
         patch = self.button_box.patch
@@ -493,12 +501,11 @@ class Sub(LabelBase):
     def build_label(self, button_label):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
-        button = TextArea(fa_icons["plus"],
-                          textprops=dict(fontproperties=fontprop_solid,
-                                         color="b"))
+        button = TextArea(
+            fa_icons["plus"], textprops=dict(fontproperties=fontprop_solid, color="b")
+        )
 
-        label = HPacker(children=[button_label, button],
-                        pad=1, sep=2, align="baseline")
+        label = HPacker(children=[button_label, button], pad=1, sep=2, align="baseline")
         return label
 
     def __init__(
@@ -509,9 +516,9 @@ class Sub(LabelBase):
         self._button_label = box
         label_box = self.build_label(self._button_label)
 
-        super().__init__(wid, label_box,
-                         textbox=textbox,
-                         pad=pad, draw_frame=draw_frame, **kwargs)
+        super().__init__(
+            wid, label_box, textbox=textbox, pad=pad, draw_frame=draw_frame, **kwargs
+        )
         self.patch.update(dict(ec="none", fc="#FFFFDD"))
 
         # self.set_popup_widgets(widgets)
@@ -557,9 +564,10 @@ class Dropdown(Sub, SelectableBase):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         # fontprop_regular = get_icon_fontprop(family="regular", size=10)
-        button = TextArea(fa_icons["caret-down"],
-                          textprops=dict(fontproperties=fontprop_solid,
-                                         color="red"))
+        button = TextArea(
+            fa_icons["caret-down"],
+            textprops=dict(fontproperties=fontprop_solid, color="red"),
+        )
 
         label = HPacker(children=[button, button_label], pad=1, sep=2, align="baseline")
         return label
@@ -579,8 +587,7 @@ class Dropdown(Sub, SelectableBase):
         return menu
 
     def __init__(
-        self, wid, label, widgets, pad=None, draw_frame=True,
-            where="selected", **kwargs
+        self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
     ):
 
         super().__init__(
@@ -624,12 +631,12 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         fontprop_regular = get_icon_fontprop(family="regular", size=10)
-        self.button_on = TextArea(SELECTED_ON,
-                                  textprops=dict(fontproperties=fontprop_solid,
-                                                 color=color))
-        self.button_off = TextArea(SELECTED_OFF,
-                                  textprops=dict(fontproperties=fontprop_regular,
-                                                 color=color))
+        self.button_on = TextArea(
+            SELECTED_ON, textprops=dict(fontproperties=fontprop_solid, color=color)
+        )
+        self.button_off = TextArea(
+            SELECTED_OFF, textprops=dict(fontproperties=fontprop_regular, color=color)
+        )
 
     def _set_figure_extra(self, fig):
         self.button_on.set_figure(fig)
@@ -652,8 +659,7 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
     def get_initial_selected(self, selected=None):
         return 0 if selected is None else selected
 
-    def __init__(self, wid, labels, selected=None, values=None,
-                 title=None, pad=3):
+    def __init__(self, wid, labels, selected=None, values=None, title=None, pad=3):
         self.selected = self.get_initial_selected(selected)
         self._populate_buttons()
 
@@ -766,12 +772,12 @@ class DropdownMenu(Radio):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         fontprop_regular = get_icon_fontprop(family="regular", size=10)
-        self.button_on = TextArea(SELECTED_ON,
-                                  textprops=dict(fontproperties=fontprop_solid,
-                                                 color=color))
-        self.button_off = TextArea(SELECTED_ON,
-                                  textprops=dict(fontproperties=fontprop_solid,
-                                                 color="w"))
+        self.button_on = TextArea(
+            SELECTED_ON, textprops=dict(fontproperties=fontprop_solid, color=color)
+        )
+        self.button_off = TextArea(
+            SELECTED_ON, textprops=dict(fontproperties=fontprop_solid, color="w")
+        )
 
     def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
@@ -806,12 +812,12 @@ class CheckBox(Radio):
 
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
         fontprop_regular = get_icon_fontprop(family="regular", size=10)
-        self.button_on = TextArea(SELECTED_ON,
-                                  textprops=dict(fontproperties=fontprop_solid,
-                                                 color=color))
-        self.button_off = TextArea(SELECTED_OFF,
-                                  textprops=dict(fontproperties=fontprop_regular,
-                                                 color=color))
+        self.button_on = TextArea(
+            SELECTED_ON, textprops=dict(fontproperties=fontprop_solid, color=color)
+        )
+        self.button_off = TextArea(
+            SELECTED_OFF, textprops=dict(fontproperties=fontprop_regular, color=color)
+        )
 
     def get_initial_selected(self, selected):
         selected = [] if selected is None else selected
@@ -922,4 +928,3 @@ class ButtonBar(Radio):
 
         if b is not None:
             return b.handle_motion_notify(event, parent)
-

@@ -1,8 +1,9 @@
-VERSION = "0.1.0"
+__version__ = "0.1.0"
 
 from .widget_box import WidgetBoxManager
 
 __all__ = ["install_widgets", "WidgetBoxManager"]
+
 
 def install_widgets_simple(ax, widgets, cb=None, loc=2):
 

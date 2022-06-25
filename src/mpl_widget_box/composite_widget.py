@@ -3,6 +3,7 @@ from typing import List
 
 from .widgets import BaseWidget
 
+
 class CompositeWidget(ABC):
     @abstractmethod
     def build_widgets(self) -> List[BaseWidget]:

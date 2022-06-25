@@ -62,7 +62,7 @@ class WidgetBoxManager:
         self._ephemeral_containers = {}
 
         self._mouse_owner = None
-        self._foreign_widgets : List[ForeignWidgetProtocol] = []
+        self._foreign_widgets: List[ForeignWidgetProtocol] = []
 
         self._stealed_lock = None
 
@@ -84,38 +84,51 @@ class WidgetBoxManager:
 
         self._container_list.remove((z, c))
 
-    def add_anchored_widget_box(self, widgets, ax, loc=2, dir="v", zorder=0,
-                                box_alignment=None,
-                                bbox_to_anchor=None, pad=10,
-                                frameon=True):
+    def add_anchored_widget_box(
+        self,
+        widgets,
+        ax,
+        loc=2,
+        dir="v",
+        zorder=0,
+        box_alignment=None,
+        bbox_to_anchor=None,
+        pad=10,
+        frameon=True,
+    ):
 
         # xy, box_alignment, pad
-        coefs = {'center':  (0.5, 0.5),
-                 'lower left': (0, 0),
-                 'lower center':  (0.5, 0),
-                 'lower right': (1.0, 0),
-                 'center right':  (1.0, 0.5),
-                 'upper right': (1.0, 1.0),
-                 'upper center':  (0.5, 1.0),
-                 'upper left': (0, 1.0),
-                 'center right':  (0, 0.5)}
+        coefs = {
+            "center": (0.5, 0.5),
+            "lower left": (0, 0),
+            "lower center": (0.5, 0),
+            "lower right": (1.0, 0),
+            "center right": (1.0, 0.5),
+            "upper right": (1.0, 1.0),
+            "upper center": (0.5, 1.0),
+            "upper left": (0, 1.0),
+            "center right": (0, 0.5),
+        }
 
-        loc_code = {1: "upper right",
-                    2: "upper left",
-                    3: "lower left",
-                    4: "lower right",
-                    5: "right",
-                    6: "center left",
-                    7: "center right",
-                    8: "lower center",
-                    9: "upper center",
-                    10: "center"}
+        loc_code = {
+            1: "upper right",
+            2: "upper left",
+            3: "lower left",
+            4: "lower right",
+            5: "right",
+            6: "center left",
+            7: "center right",
+            8: "lower center",
+            9: "upper center",
+            10: "center",
+        }
 
         # change integer loc to string.
         loc = loc_code.get(loc, loc)
         xy = coefs.get(loc)
         box_alignment = xy if box_alignment is None else box_alignment
         from collections import Sequence
+
         _padx, _pady = pad if isinstance(pad, Sequence) else (pad, pad)
         padx = np.sign(0.5 - xy[0]) * _padx
         pady = np.sign(0.5 - xy[1]) * _pady
@@ -133,27 +146,32 @@ class WidgetBoxManager:
             # install_args=install_args
             dir=dir,
             bbox_to_anchor=bbox_to_anchor,
-            frameon=frameon
+            frameon=frameon,
         )
 
         self.add_container(wc, zorder=zorder)
         return wc
 
     def add_sub_widget_box(
-            self,
-            widgets,
-            ax,
-            sticky=True,
-            bbox_to_anchor=None,
-            xy=(1, 1),
-            xybox=(10, -10),
-            parent=None,
-            zorder=0,
+        self,
+        widgets,
+        ax,
+        sticky=True,
+        bbox_to_anchor=None,
+        xy=(1, 1),
+        xybox=(10, -10),
+        parent=None,
+        zorder=0,
     ):
 
         sub = SubGuiBox(
-            widgets, ax, bbox_to_anchor=bbox_to_anchor,
-            xy=xy, xybox=xybox, sticky=sticky, parent=parent
+            widgets,
+            ax,
+            bbox_to_anchor=bbox_to_anchor,
+            xy=xy,
+            xybox=xybox,
+            sticky=sticky,
+            parent=parent,
         )
 
         self.add_container(sub, zorder=zorder)
@@ -223,8 +241,7 @@ class WidgetBoxManager:
             self.purge_ephemeral_containers(e)
 
     def purge_ephemeral_containers(self, event):
-        event_container = (event.container_info.get("container", None)
-                           if event else None)
+        event_container = event.container_info.get("container", None) if event else None
         to_be_deleted = [
             (wid, c)
             for (wid, c) in self._ephemeral_containers.items()
@@ -347,8 +364,7 @@ class WidgetBoxManager:
         to_be_removed = []
         for zorder, c in self._container_list:
             # check if c.ax is still in the figure and uninstall if not.
-            if (isinstance(c, AxesWidgetBoxContainer) and
-                c.ax not in self.fig.axes):
+            if isinstance(c, AxesWidgetBoxContainer) and c.ax not in self.fig.axes:
                 c.uninstall(self)
                 to_be_removed.append((zorder, c))
                 continue
@@ -382,7 +398,8 @@ class WidgetBoxManager:
     def get_widget_by_id(self, wid):
         for zorder, c in self._container_list:
             w = c.get_widget_by_id(wid)
-            if w is not None: return w
+            if w is not None:
+                return w
 
     # containers can have multiple widget_boxes.
 
@@ -406,7 +423,8 @@ class WidgetBoxContainerBase:
     def get_widget_by_id(self, wid):
         for zorder, wb in self.iter_wb_list():
             w = wb.get_widget_by_id(wid)
-            if w is not None: return w
+            if w is not None:
+                return w
 
     def check_event_area(self, event):
         for zorder, wb in self.iter_wb_list():
@@ -525,29 +543,51 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
 
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
-    def __init__(self, widgets, ax, bbox_to_anchor=None,
-                 xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
-                 frameon=True,
-                 dir="v"):
+    def __init__(
+        self,
+        widgets,
+        ax,
+        bbox_to_anchor=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        box_alignment=(0, 1),
+        frameon=True,
+        dir="v",
+    ):
 
         widget_box = self._make_widget_box(
-            widgets, ax, bbox_to_anchor=bbox_to_anchor,
-            xy=xy, xybox=xybox, box_alignment=box_alignment,
-            dir=dir, frameon=frameon
+            widgets,
+            ax,
+            bbox_to_anchor=bbox_to_anchor,
+            xy=xy,
+            xybox=xybox,
+            box_alignment=box_alignment,
+            dir=dir,
+            frameon=frameon,
         )
         super().__init__(widget_box, ax)
 
     def _make_widget_box(
-        self, widgets, ax, bbox_to_anchor=None,
-            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
-            frameon=True,
-            dir="v"
+        self,
+        widgets,
+        ax,
+        bbox_to_anchor=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        box_alignment=(0, 1),
+        frameon=True,
+        dir="v",
     ):
 
         _widget_box = AnchoredWidgetBox(
-            widgets, ax, bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
-            box_alignment=box_alignment , dir=dir,
-            frameon=frameon
+            widgets,
+            ax,
+            bbox_to_anchor=bbox_to_anchor,
+            xy=xy,
+            xybox=xybox,
+            box_alignment=box_alignment,
+            dir=dir,
+            frameon=frameon,
         )
 
         return _widget_box
@@ -564,8 +604,7 @@ class SubGuiBox(AnchoredWidgetContainer):
         parent=None,
         sticky=True,
     ):
-        super().__init__(widgets, ax,
-                         bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox)
+        super().__init__(widgets, ax, bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox)
 
         # sticky for only for event from the same container.
         self.sticky = sticky
@@ -706,21 +745,23 @@ class WidgetBoxBase:
 
 class AnchoredWidgetBox(WidgetBoxBase):
     def __init__(
-            self,
-            widgets,
-            ax,
-            bbox_to_anchor=None,
-            xy=(0, 1),
-            xybox=(0, 0),
-            box_alignment=(0, 1),
-            frameon=True,
-            dir="v",
+        self,
+        widgets,
+        ax,
+        bbox_to_anchor=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        box_alignment=(0, 1),
+        frameon=True,
+        dir="v",
     ):
 
         install_args = dict(
-            bbox_to_anchor=bbox_to_anchor, xy=xy, xybox=xybox,
+            bbox_to_anchor=bbox_to_anchor,
+            xy=xy,
+            xybox=xybox,
             box_alignment=box_alignment,
-            frameon=frameon
+            frameon=frameon,
         )
 
         self._install_args = install_args
@@ -740,14 +781,18 @@ class AnchoredWidgetBox(WidgetBoxBase):
             )
             box = HPacker(children=[_pack], pad=0, sep=0)
 
-        wrapped = self._make_wrapped_widget_box(self.ax, box,
-                                                **self._install_args)
+        wrapped = self._make_wrapped_widget_box(self.ax, box, **self._install_args)
         return wrapped
 
     def _make_wrapped_widget_box(
-        self, ax, box, bbox_to_anchor=None,
-            xy=(0, 1), xybox=(0, 0), box_alignment=(0, 1),
-            frameon=True
+        self,
+        ax,
+        box,
+        bbox_to_anchor=None,
+        xy=(0, 1),
+        xybox=(0, 0),
+        box_alignment=(0, 1),
+        frameon=True,
     ):
         if bbox_to_anchor is None:
             bbox_to_anchor = ax

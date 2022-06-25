@@ -7,4 +7,3 @@ class ForeignWidgetProtocol(Protocol):
 
     def purge_background(self):
         ...
-

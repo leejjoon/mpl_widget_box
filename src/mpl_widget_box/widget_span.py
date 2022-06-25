@@ -38,7 +38,7 @@ class Span:
             useblit=True,
             props=dict(alpha=0.2, facecolor="tab:blue"),
             interactive=True,
-            drag_from_anywhere=True
+            drag_from_anywhere=True,
         )
 
         self.span.set_active(False)
@@ -64,10 +64,12 @@ class Span:
 
     def draw(self, renderer):
         if self.span is not None:
-            artists = sorted(self.span.artists,
-                             # FIXME : check the implementation of matplotlib. Newer version needs _get_animated_artists.
-                             #+ self.span._get_animated_artists()
-                             key=lambda a: a.get_zorder())
+            artists = sorted(
+                self.span.artists,
+                # FIXME : check the implementation of matplotlib. Newer version needs _get_animated_artists.
+                # + self.span._get_animated_artists()
+                key=lambda a: a.get_zorder(),
+            )
             for a in artists:
                 a.draw(renderer)
 
@@ -87,7 +89,7 @@ class SpanSelectors(Span, CompositeWidget):
         self.markers_selected = None
 
         # FIXME: its length needs to be modified according to the label length
-        self.marker_colors = rcParams['axes.prop_cycle'].by_key()['color']
+        self.marker_colors = rcParams["axes.prop_cycle"].by_key()["color"]
 
         self.marker_unset_color = "0.7"
 
@@ -98,14 +100,14 @@ class SpanSelectors(Span, CompositeWidget):
         SELECTED_ON = fontawesome.icons["clipboard-check"]
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
 
-        button = TextArea(SELECTED_ON,
-                          textprops=dict(fontproperties=fontprop_solid,
-                                         color=self.marker_unset_color))
-
-        box = HPacker(
-            children=[TextArea(l), button],
-            pad=1, sep=4, align="baseline"
+        button = TextArea(
+            SELECTED_ON,
+            textprops=dict(
+                fontproperties=fontprop_solid, color=self.marker_unset_color
+            ),
         )
+
+        box = HPacker(children=[TextArea(l), button], pad=1, sep=4, align="baseline")
 
         return box, button
 
@@ -121,25 +123,24 @@ class SpanSelectors(Span, CompositeWidget):
 
         self.markers_selected = selection_markers
 
-        self.selector = Radio(self._prefixed_name("sel"),
-                              label_widgets,
-                              values=self.values)
+        self.selector = Radio(
+            self._prefixed_name("sel"), label_widgets, values=self.values
+        )
 
         widgets = [
             # CheckBox(self._prefixed_name("edit"),
             #          ["Show & Edit"], values=["edit"]),
             self.selector,
-            HWidgets(children=[Button(self._prefixed_name("store"),
-                                      "Store"),
-                               Button(self._prefixed_name("purge"),
-                                      "Purge")]),
+            HWidgets(
+                children=[
+                    Button(self._prefixed_name("store"), "Store"),
+                    Button(self._prefixed_name("purge"), "Purge"),
+                ]
+            ),
         ]
 
         return widgets
 
-    # FIXME: with the recent change, the 'post_install' method is not much
-    # relevant anymore as this is triggered right after the 'build_widgets'
-    # method. We leave it as is for now.
     def post_install(self, wbm):
         wbm._foreign_widgets.append(self.span_selection_bars)
         wbm._foreign_widgets.append(self)
@@ -160,8 +161,7 @@ class SpanSelectors(Span, CompositeWidget):
 
         s = self.selector.get_status()
 
-        saved_extent = self.extents_dict.get(s["value"],
-                                             (0, 0))
+        saved_extent = self.extents_dict.get(s["value"], (0, 0))
         self.set_current_extents(saved_extent)
 
     def process_event(self, wb, ev, status):
@@ -199,19 +199,18 @@ class SpanSelectors(Span, CompositeWidget):
         return f"{self.rootname}:{n}"
 
 
-class SpanSelectionBars():
+class SpanSelectionBars:
     """
     This draws bars at the top of the axes showing the current
     span selections.
     """
+
     def __init__(self, ax, span):
         import matplotlib.lines as mlines
         import matplotlib.transforms as mtransforms
 
-        trans = mtransforms.blended_transform_factory(
-            ax.transData, ax.transAxes)
-        ann = mlines.Line2D([0, 0, 0, 0],
-                            [1.02, 1.04, 1.04, 1.02])
+        trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+        ann = mlines.Line2D([0, 0, 0, 0], [1.02, 1.04, 1.04, 1.02])
         ann.set_transform(trans)
         ax._set_artist_props(ann)
 
