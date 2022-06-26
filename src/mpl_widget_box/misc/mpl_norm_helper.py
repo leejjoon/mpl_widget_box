@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.colors as mcolors
-import matplotlib.colors as mcolors
 
 from astropy.visualization import (
     LinearStretch,
