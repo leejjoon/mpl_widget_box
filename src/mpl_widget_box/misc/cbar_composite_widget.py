@@ -1,3 +1,4 @@
+from typing import Literal
 import numpy as np
 from matplotlib import rcParams
 from matplotlib.offsetbox import (
@@ -53,8 +54,9 @@ class CbarSelectorWidget(CompositeWidget):
     def _prefixed_name(self, n):
         return f"{self.rootname}:{n}"
 
-    def __init__(self, rootname):
+    def __init__(self, rootname, dir: Literal["v", "h"]="v"):
         self.rootname = rootname
+        self._dir = dir
 
         self.cmaps = get_matplotlib_cmaps()
         self.cm_kind_list = list(self.cmaps.keys())
@@ -112,8 +114,13 @@ class CbarSelectorWidget(CompositeWidget):
         else:
             norm_buttons = []
 
-        widgets = [W.Sub(self._prefixed_name("sub"), self.cbar, sub_widgets, where="parent",
-                         tooltip="select colorbar"),
+        if self._dir == "h":
+            kwargs = {"where": "selected"}
+        else:
+            kwargs = {}
+
+        widgets = [W.Sub(self._prefixed_name("sub"), self.cbar, sub_widgets,
+                         tooltip="select colorbar",  **kwargs),
                    W.Label(self._prefixed_name("cm-name"), ""), ]
 
         return widgets + norm_buttons
