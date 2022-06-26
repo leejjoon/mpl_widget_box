@@ -10,7 +10,6 @@ from .widgets import (
     Radio,
     HWidgets,
     Button,
-    CheckBox,
 )
 
 from .composite_widget import CompositeWidget

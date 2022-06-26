@@ -52,7 +52,6 @@ def cb(wbm, ev: W.WidgetBoxEvent, status):
     ax.set_title(f"freq = {freqs[i]}")
     wbm.draw_idle()  # or you can simply do plt.draw()
 
-
 # We need to keep the reference of the return value.
 # If wbm gets deleted, the widgets will disappear.
 wbm = install_widgets_simple(ax, widgets, cb)

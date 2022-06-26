@@ -29,8 +29,8 @@ subwidgets1 = [
 
 subwidgets2 = [
     w.Label("", "My Label II"),
-    w.HWidgets(children=[w.Button("zoom", "Zoom KK"),
-                         w.Button("plot", "KKK")])
+    w.HWidgets([w.Button("zoom", "Zoom KK"),
+                w.Button("plot", "KKK")])
 ]
 
 menu_widget = w.HWidgets(
