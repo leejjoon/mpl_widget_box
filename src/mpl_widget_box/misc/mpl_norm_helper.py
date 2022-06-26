@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib.colors as mcolors
+from matplotlib.offsetbox import DrawingArea
+import matplotlib.lines as mlines
 
 from astropy.visualization import (
     LinearStretch,
@@ -32,26 +33,6 @@ def get_norms():
     return norms
 
 
-if __name__ == "__main__":
-
-    Norms = get_norms()
-
-    arr = np.arange(100).reshape((10, 10))
-
-    fig, ax = plt.subplots(1, 1, num=1, clear=True)
-    im = ax.imshow(arr)
-
-    a = np.linspace(0, 1, 100)
-
-    im.set_norm(Norms["sqrt"]())
-
-    clf()
-    ax = plt.axes([0.1, 0.1, 0.2, 0.2])
-    ax.plot(a, Norms["log"]()(a), lw=4, c="0.5")
-
-from matplotlib.offsetbox import DrawingArea
-import matplotlib.lines as mlines
-
 Norms = get_norms()
 
 
@@ -65,27 +46,3 @@ def get_norm_da(norm_name, w=10, h=10):
     return da
 
 
-if False:
-    from matplotlib.offsetbox import (
-        OffsetBox,
-        AnnotationBbox,
-        DrawingArea,
-        TextArea,
-        OffsetImage,
-    )
-
-    fig, ax = plt.subplots(1, 1, num=1, clear=True)
-
-    da = get_norm_da("asinh")
-    xy = (0.5, 0.5)
-    xybox = (0, 0)
-    box = AnnotationBbox(
-        da,
-        xy=xy,
-        xybox=xybox,
-        boxcoords="offset points",
-        # box_alignment=(0, 1),
-        pad=0.3,
-        animated=False,
-    )
-    ax.add_artist(box)
