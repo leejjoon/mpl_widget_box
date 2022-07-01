@@ -6,14 +6,14 @@ authors = ["Jae-Joon Lee <lee.j.joon@gmail.com>"]
 license = "BSD"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-matplotlib = "^3.5.2"
-rapidyaml = "^0.4.1"
+python = ">3.7"
+matplotlib = "^3"
+rapidyaml = "^0.4"
 astropy = "^5.1"
-fontawesomefree = "^6.1.1"
+fontawesomefree = ">6.1"
 
 [tool.poetry.dev-dependencies]
-ipython = "^8.4.0"
+ipython = "^8.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
