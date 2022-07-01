@@ -2,7 +2,7 @@ __version__ = "0.1.0"
 
 from .widget_box import WidgetBoxManager
 
-__all__ = ["install_widgets", "WidgetBoxManager"]
+__all__ = ["install_widgets_simple", "WidgetBoxManager"]
 
 
 def install_widgets_simple(ax, widgets, cb=None, loc=2):
