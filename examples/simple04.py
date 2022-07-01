@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 from mpl_widget_box import (widgets as W,
                             WidgetBoxManager)
 
-from mpl_widget_box.widget_span import Span, SpanSelectors
-# from mpl_widget_span import Span
-
 freqs = np.arange(2, 20, 3)
 t = np.arange(0.0, 1.0, 0.001)
 s = np.sin(2*np.pi*freqs[0]*t)
