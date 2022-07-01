@@ -2,7 +2,8 @@ from matplotlib.offsetbox import HPacker, TextArea
 from matplotlib import rcParams
 from matplotlib.widgets import SpanSelector as _SpanSelector
 
-import fontawesome
+from .fa_helper import FontAwesome
+fa_icons = FontAwesome.icons
 
 from .widgets import get_icon_fontprop
 
@@ -96,7 +97,7 @@ class SpanSelectors(Span, CompositeWidget):
 
     def _make_hpacker(self, l):
 
-        SELECTED_ON = fontawesome.icons["clipboard-check"]
+        SELECTED_ON = fa_icons["clipboard-check"]
         fontprop_solid = get_icon_fontprop(family="solid", size=10)
 
         button = TextArea(

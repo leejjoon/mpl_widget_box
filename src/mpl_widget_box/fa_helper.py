@@ -98,6 +98,7 @@ def main():
         "circle",
         "square-check",
         "square",
+        "clipboard-check",  # used by widget_span.py
     ]
 
     icons = dict((k, icons_all[k]) for k in kl)
