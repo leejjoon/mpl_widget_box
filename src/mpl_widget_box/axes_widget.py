@@ -1,11 +1,49 @@
 from abc import abstractmethod
 
+from matplotlib.axes import Axes
+from matplotlib.font_manager import FontProperties
+from matplotlib import rcParams
 from matplotlib.offsetbox import DrawingArea
+from matplotlib.transforms import Bbox, TransformedBbox
+
 from matplotlib.widgets import TextBox, Slider
 
 from .widgets import BaseWidget, Label, HWidgets
 
 from .composite_widget import CompositeWidget
+
+
+class OffsetBoxLocator:
+    def __init__(self, offsetbox, prop=None):
+        self._offsetbox = offsetbox
+
+        if prop is None:
+            self.prop = FontProperties(size=rcParams["legend.fontsize"])
+        elif isinstance(prop, dict):
+            self.prop = FontProperties(**prop)
+            if "size" not in prop:
+                self.prop.set_size(rcParams["legend.fontsize"])
+        else:
+            self.prop = prop
+
+    # def draw(self, renderer):
+    #     raise RuntimeError("No draw method should be called")
+
+    def __call__(self, ax, renderer):
+        self.axes = ax
+
+        # fontsize = renderer.points_to_pixels(self.prop.get_size_in_points())
+
+        box = self._offsetbox
+        # box._update_offset_func(renderer, fontsize)
+        width, height, xdescent, ydescent = box.get_extent(renderer)
+
+        px, py = box.get_offset(width, height, 0, 0, renderer)
+        bbox_canvas = Bbox.from_bounds(px, py, width, height)
+        tr = ax.figure.transFigure.inverted()
+        bb = TransformedBbox(bbox_canvas, tr)
+
+        return bb
 
 
 class DrawingAreaBase(DrawingArea):
@@ -65,7 +103,6 @@ class AxesWidget(BaseWidget):
         self._cb_get_status = None
 
     def add_axes_box(self):
-        from mpl_widget_box.axes_widget_base import OffsetBoxLocator, Axes, TextBox
 
         locator = OffsetBoxLocator(self.child_box)
         self.ax = Axes(self.figure, [0, 0, 1, 1], animated=True)
