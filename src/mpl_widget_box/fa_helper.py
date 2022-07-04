@@ -1,6 +1,6 @@
 from typing import Literal
 from pathlib import Path
-from matplotlib.font_manager import FontProperties
+from matplotlib.font_manager import FontManager, FontProperties
 
 # import fontawesome
 import fontawesomefree
@@ -73,16 +73,17 @@ if __name__ != "__main__":
 
 
 def get_fa_textarea(
-    icon_name: str,
-    color="k",
-    size: int = 10,
-    family: Literal["regular", "solid"] = "solid",
+        icon_name: str,
+        color="k",
+        size: int = 10,
+        family: Literal["regular", "solid"] = "solid",
 ):
 
     fontprop = FontAwesome.get_fontprop(family=family, size=size)
 
+    char = FontAwesome.icons.get(icon_name, icon_name)
     button = TextArea(
-        FontAwesome.icons[icon_name],
+        char,
         textprops=dict(fontproperties=fontprop, color=color),
     )
     return button

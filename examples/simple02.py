@@ -6,8 +6,21 @@ from mpl_widget_box import (widgets as W,
                             WidgetBoxManager,
                             install_widgets_simple)
 
-from mpl_widget_box.fa_helper import get_fa_textarea
+from mpl_widget_box.fa_helper import get_fa_textarea, FontAwesome
 
+# By default, only a limited set of icon names are loaded. If you want to use
+# full icon set, you need to manually load the icon names and use. It will use
+# ryml module if available get fall back to yaml. ryml is fater in its loading
+# speed.
+try:
+    import ryml
+except ImportError:
+    ryml = None
+
+if ryml:
+    icons = FontAwesome.load_icons_ryml()
+else:
+    icons = FontAwesome.load_icons_ryml()
 
 
 freqs = np.arange(2, 20, 3)
@@ -18,8 +31,8 @@ fig, ax = plt.subplots(num=2, clear=True)
 l, = plt.plot(t, s, lw=2)
 
 # fontawesome icons can be used as a label
-btn_up = get_fa_textarea("caret-up", color="w")
-btn_down = get_fa_textarea("caret-down", color="w")
+btn_up = get_fa_textarea(icons["caret-up"], color="w")
+btn_down = get_fa_textarea(icons["caret-down"], color="w")
 
 widgets = [
     W.Radio("radio-freq", [str(c) for c in freqs], selected=0),
