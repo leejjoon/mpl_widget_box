@@ -82,6 +82,16 @@ class WidgetBoxManager:
         else:
             raise RuntimeError("no container found")
 
+        # we first try to remove any ephemeral containers of child widgets.
+        for zorder, wb in c.iter_wb_list():
+            flattened_widgets = wb._get_flattened_widgets(wb._widgets)
+            for w in flattened_widgets:
+                wid = w.wid
+                if wid in self._ephemeral_containers:
+                    c1 = self._ephemeral_containers[wid]
+                    self.remove_container(c1)
+                    del self._ephemeral_containers[wid]
+
         self._container_list.remove((z, c))
 
     def add_anchored_widget_box(
