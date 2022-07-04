@@ -30,8 +30,8 @@ subwidgets2 = [
 
 
 widgets = [
-    W.ButtonBar("menu-selector", ["Buttons", "Radio"],
-                values=["menu1", "menu2"]),
+    W.ButtonBar("menu-selector", ["  ", "Buttons", "Radio"],
+                values=["empty", "menu1", "menu2"]),
 ]
 
 wbm = WidgetBoxManager(fig)
@@ -40,24 +40,31 @@ wc_menu = wbm.add_anchored_widget_box(
     widgets,
     ax,
     loc=2,
-    bbox_to_anchor=fig,
-    frameon=False,
+    box_alignment=(0, 0),
+    pad=(0, 0),
+    bbox_to_anchor=ax,
+    frameon=False
 )
 
+
 wc_sub = wbm.add_anchored_widget_box(
-    subwidgets1,
+    [],
     ax,
     loc=2,
 )
-
+wc_sub.set_visible(False)
 
 def cb(wbm: WidgetBoxManager, ev, status):
     if ev.wid == "menu-selector":
         selected = status["menu-selector"]["value"]
+        wc_sub.set_visible(True)
         if selected == "menu1":
             subwidgets = subwidgets1
-        else:
+        elif selected == "menu2":
             subwidgets = subwidgets2
+        else:
+            subwidgets = []
+            wc_sub.set_visible(False)
 
         wc_sub.reinit_widget_box(wbm, subwidgets)
 

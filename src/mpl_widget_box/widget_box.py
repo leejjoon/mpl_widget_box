@@ -420,6 +420,13 @@ class WidgetBoxContainerBase:
         #     wb_list = []
         self._wb_list = []
         self._installed = False
+        self._visible = True
+
+    def set_visible(self, v):
+        self._visible = v
+
+    def get_visible(self):
+        return self._visible
 
     def append_widget_box(self, widget_box, zorder=0):
         self._wb_list.append((zorder, widget_box))
@@ -443,6 +450,9 @@ class WidgetBoxContainerBase:
                 return True
 
     def handle_event(self, event, parent=None):
+        if not self.get_visible:
+            return None
+
         for zorder, wb in sorted(
             self._wb_list, key=operator.itemgetter(0), reverse=True
         ):
@@ -454,7 +464,6 @@ class WidgetBoxContainerBase:
 
         if e is not None:
             e.container_info["container"] = self
-            pass
 
         return e
 
@@ -462,6 +471,9 @@ class WidgetBoxContainerBase:
         pass
 
     def draw_widgets(self, event):
+        if not self.get_visible():
+            return []
+
         if not self.installed:
             raise RuntimeError("need to be installed before drawing")
 
