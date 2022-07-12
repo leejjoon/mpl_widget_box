@@ -137,7 +137,7 @@ class WidgetBoxManager:
         loc = loc_code.get(loc, loc)
         xy = coefs.get(loc)
         box_alignment = xy if box_alignment is None else box_alignment
-        from collections import Sequence
+        from collections.abc import Sequence
 
         _padx, _pady = pad if isinstance(pad, Sequence) else (pad, pad)
         padx = np.sign(0.5 - xy[0]) * _padx

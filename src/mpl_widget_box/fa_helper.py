@@ -1,4 +1,3 @@
-from typing import Literal
 from pathlib import Path
 from matplotlib.font_manager import FontManager, FontProperties
 
@@ -73,12 +72,13 @@ if __name__ != "__main__":
 
 
 def get_fa_textarea(
-        icon_name: str,
-        color="k",
-        size: int = 10,
-        family: Literal["regular", "solid"] = "solid",
+    icon_name: str,
+    color="k",
+    size: int = 10,
+    family: str = "solid",
 ):
 
+    assert family in ["regular", "solid"]
     fontprop = FontAwesome.get_fontprop(family=family, size=size)
 
     char = FontAwesome.icons.get(icon_name, icon_name)

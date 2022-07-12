@@ -1,4 +1,3 @@
-from typing import Literal
 import numpy as np
 from matplotlib import rcParams
 from matplotlib.offsetbox import (
@@ -7,13 +6,13 @@ from matplotlib.offsetbox import (
 )
 from matplotlib.image import BboxImage
 
-from .. import (widgets as W,
-                WidgetBoxManager)
+from .. import widgets as W, WidgetBoxManager
 from ..composite_widget import CompositeWidget
 from .matplotlib_colormaps import get_matplotlib_cmaps
 
 try:
     from .mpl_norm_helper import get_norm_da, get_norms
+
     include_norm_buttons = True
 except ImportError:
     print("no norm support")
@@ -54,8 +53,10 @@ class CbarSelectorWidget(CompositeWidget):
     def _prefixed_name(self, n):
         return f"{self.rootname}:{n}"
 
-    def __init__(self, rootname, dir: Literal["v", "h"]="v"):
+    def __init__(self, rootname, dir="v"):
         self.rootname = rootname
+
+        assert dir in "vh"
         self._dir = dir
 
         self.cmaps = get_matplotlib_cmaps()
@@ -82,9 +83,7 @@ class CbarSelectorWidget(CompositeWidget):
     def update_kind(self, wbm, kind):
         cm_widgets, cm_names = get_colormap_widgets(self.cmaps, kind)
 
-        cmap_menu_items = wbm.get_widget_by_id(
-            self._prefixed_name("cm-selector")
-        )
+        cmap_menu_items = wbm.get_widget_by_id(self._prefixed_name("cm-selector"))
 
         cmap_menu_items.replace_labels(cm_widgets, values=cm_names)
 
