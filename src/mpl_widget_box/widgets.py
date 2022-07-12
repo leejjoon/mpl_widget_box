@@ -45,13 +45,16 @@ class BaseWidget(PaddedBox):
     ):
         super().__init__(child, pad=pad, draw_frame=draw_frame, patch_attrs=patch_attrs)
 
+        self.set_tooltip(tooltip)
+
+        self._mouse_on = False
+        self._expand = expand
+
+    def set_tooltip(self, tooltip):
         if tooltip is not None:
             self.tooltip = self.create_tooltip(tooltip)
         else:
             self.tooltip = None
-
-        self._mouse_on = False
-        self._expand = expand
 
     def get_event_area(self, renderer):
         bb = self.patch.get_window_extent(renderer)
@@ -538,18 +541,25 @@ class Sub(LabelBase):
 
 
 class SelectableBase:
-    def get_default_box(self, l):
+    def get_default_box(self, l, tooltip):
         if isinstance(l, str):
             box = TextArea(l)
+            box.set_tooltip(tooltip)
         else:
             box = l
 
         return box
 
-    def get_boxes(self, labels):
+    def get_boxes(self, labels, tooltips=None):
         boxes = []
-        for l in labels:
-            box = self.get_default_box(l)
+        if tooltips is None:
+            tooltips = [None] * len(labels)
+
+        if len(tooltips) != len(labels):
+            raise ValueError("The length of tolltips should match labels")
+
+        for l, t in zip(labels, tooltips):
+            box = self.get_default_box(l, tooltip=t)
             boxes.append(box)
             # if isinstance(l, str):
             # else:
@@ -646,21 +656,26 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         super().set_figure(fig)
         self._set_figure_extra(fig)
 
-    def get_default_box(self, l):
+    def get_default_box(self, l, tooltip=None):
         if isinstance(l, str):
+            t = Label("", l)
+            t.set_tooltip(tooltip)
             box = HPacker(
-                children=[self.button_off, TextArea(l)], pad=1, sep=2, align="baseline"
+                children=[self.button_off, t], pad=1, sep=2, align="baseline"
             )
         else:
             box = HPacker(children=[self.button_off, l], pad=1, sep=2, align="baseline")
 
         return box
 
-    def get_initial_selected(self, selected=None):
-        return 0 if selected is None else selected
+    def __init__(self, wid, labels, selected=None, values=None,
+                 title=None, tooltips=None, pad=3):
+        if tooltips is None:
+            tooltips = [None] * len(labels)
 
-    def __init__(self, wid, labels, selected=None, values=None, title=None, pad=3):
-        self.selected = self.get_initial_selected(selected)
+        if len(tooltips) != len(labels):
+            raise ValueError("The length of tolltips should match labels")
+
         self._populate_buttons()
 
         self.wid = wid
@@ -678,7 +693,7 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
 
         self.values = values if values is not None else labels
 
-        self.boxes.extend(self.get_boxes(labels))
+        self.boxes.extend(self.get_boxes(labels, tooltips=tooltips))
 
         kwargs = {}
         box = VPacker(children=self.boxes, pad=0, sep=3, **kwargs)
@@ -687,6 +702,12 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         WidgetBoxEventHandlerBase.__init__(self, box)
 
         self._update_patch(self.patch)
+
+        self.initialize_selections(selected)
+
+    def initialize_selections(self, selected):
+        selected = 0 if selected is None else selected
+
         self.select(selected)
 
     def replace_labels(self, labels, values=None):
@@ -726,6 +747,14 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.selected = i
 
         return i
+
+    def handle_motion_notify(self, event, parent=None):
+        _, b = self.get_responsible_child(event)
+        if b is not None:
+            children = b.get_visible_children()
+            if len(children) > 1:
+                b1 = b.get_visible_children()[1]
+                return b1.handle_motion_notify(event, parent)
 
     def handle_button_press(self, event, parent=None):
         i, b = self.get_responsible_child(event)
@@ -819,9 +848,13 @@ class CheckBox(Radio):
             SELECTED_OFF, textprops=dict(fontproperties=fontprop_regular, color=color)
         )
 
-    def get_initial_selected(self, selected):
-        selected = [] if selected is None else selected
-        return selected
+    def initialize_selections(self, selected):
+        self.selected = []
+        if selected is None:
+            return
+
+        for i in selected:
+            self.select(i)
 
     def select(self, i):
         if i is None:
