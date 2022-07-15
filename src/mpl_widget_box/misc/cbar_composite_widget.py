@@ -95,21 +95,26 @@ class CbarSelectorWidget(CompositeWidget):
             W.HWidgets(
                 [
                     W.Label(self._prefixed_name("cm-kind-label"), "kind"),
-                    W.Dropdown(self._prefixed_name("cm-kind"), "",
-                               self.cm_kind_list),
+                    W.Dropdown(self._prefixed_name("cm-kind"), "", self.cm_kind_list),
                 ]
             ),
-            W.DropdownMenu(self._prefixed_name("cm-selector"),
-                           cm_widgets, values=cm_names),
+            W.DropdownMenu(
+                self._prefixed_name("cm-selector"), cm_widgets, values=cm_names
+            ),
         ]
 
         if include_norm_buttons:
 
             norm_names = ["linear", "sqrt", "log", "squared"]
             _norm_da = [get_norm_da(c) for c in norm_names]
-            norm_buttons = [W.ButtonBar(self._prefixed_name("norm-selector"),
-                                       _norm_da,
-                                       values=norm_names, tooltips=norm_names)]
+            norm_buttons = [
+                W.ButtonBar(
+                    self._prefixed_name("norm-selector"),
+                    _norm_da,
+                    values=norm_names,
+                    tooltips=norm_names,
+                )
+            ]
         else:
             norm_buttons = []
 
@@ -118,9 +123,16 @@ class CbarSelectorWidget(CompositeWidget):
         else:
             kwargs = {}
 
-        widgets = [W.Sub(self._prefixed_name("sub"), self.cbar, sub_widgets,
-                         tooltip="select colorbar",  **kwargs),
-                   W.Label(self._prefixed_name("cm-name"), ""), ]
+        widgets = [
+            W.Sub(
+                self._prefixed_name("sub"),
+                self.cbar,
+                sub_widgets,
+                tooltip="select colorbar",
+                **kwargs,
+            ),
+            W.Label(self._prefixed_name("cm-name"), ""),
+        ]
 
         return widgets + norm_buttons
 
@@ -130,9 +142,7 @@ class CbarSelectorWidget(CompositeWidget):
     def post_uninstall(self, wbm):
         pass
 
-    def process_event(self,
-                      wbm: WidgetBoxManager, ev: W.WidgetBoxEvent, status,
-                      im):
+    def process_event(self, wbm: WidgetBoxManager, ev: W.WidgetBoxEvent, status, im):
         # when colormap button is selected.
         if ev.wid == self._prefixed_name("cm-selector"):
             selected_cmap = status[self._prefixed_name("cm-selector")]["value"]
