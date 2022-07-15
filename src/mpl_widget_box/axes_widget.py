@@ -143,6 +143,7 @@ class CompositeAxesWidgetBase(CompositeWidget):
             expand=True,
         )
         self._label = label
+        self._wbm = None
 
     def build_widgets(self):
         if self._label is None:
@@ -166,9 +167,10 @@ class CompositeAxesWidgetBase(CompositeWidget):
         wbm.add_foreign_widget(self.axes_widget)
 
         aw.set_cb_get_status(self.get_status)
+        self._wbm = wbm
 
     def post_uninstall(self, wbm):
-        pass
+        self._wbm = None
 
     def get_status(self):
         return self._get_status(self._box)
@@ -196,14 +198,48 @@ class TextAreaWidget(CompositeAxesWidgetBase):
 
 
 class SliderWidget(CompositeAxesWidgetBase):
-    def __init__(self, wid, width, height, vmin=0, vmax=1, label=None) -> None:
+    def __init__(self, wid, width, height,
+                 valmin=0, valmax=1, valinit=0.5, valfmt=None,
+                 label=None, tooltip=None) -> None:
         super().__init__(wid, width, height, label=label)
-        self._vmin = vmin
-        self._vmax = vmax
+        self._vmin = valmin
+        self._vmax = valmax
+        self._vinit = valinit
+        self._vfmt = "{}" if valfmt is None else valfmt
+        self._value_label = None
+        self._tooltip = tooltip
+
+    def cb(self, value):
+        if self._value_label is not None:
+            self._value_label.set_label(self._vfmt.format(value))
+
+        status = self._wbm.get_named_status()
+        self._wbm._callback(self._wbm, None, status)
+
+    def build_widgets(self):
+        if self._label is None:
+            r = [self.axes_widget]
+        else:
+            self._value_label = Label("value", "")
+            r = [
+                HWidgets(
+                    children=[Label("label", self._label,
+                                    tooltip=self._tooltip),
+                              self.axes_widget,
+                              self._value_label],
+                    align="center",
+                )
+            ]
+        return r
 
     def _make_box(self, ax):
-        _box = Slider(ax, "", self._vmin, self._vmax)
+        _box = Slider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
         _box.valtext.set_visible(False)
+        _box.on_changed(self.cb)
+
+        if self._value_label is not None:
+            self._value_label.set_label(self._vfmt.format(self._vinit))
+
         return _box
 
     def _get_status(self, box):
