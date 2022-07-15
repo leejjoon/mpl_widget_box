@@ -386,14 +386,16 @@ class WidgetBoxManager:
             self._container_list.remove(zc)
 
         renderer = event.canvas.get_renderer()
-        for draw in delayed_draws:
-            draw(renderer)
 
         # foreign widgets may need to be an attribute of axes.
         if draw_foreign_widgets:
             for a in self._foreign_widgets:
                 a.purge_background()
                 a.draw(renderer)
+
+        for draw in delayed_draws:
+            draw(renderer)
+
 
     def get_named_status(self):
         status = {}
