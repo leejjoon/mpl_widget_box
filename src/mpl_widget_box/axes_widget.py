@@ -223,6 +223,25 @@ class TextAreaWidget(CompositeAxesWidgetBase):
 
 
 class SliderWidget(CompositeAxesWidgetBase):
+    def _get_default_fmt(self, vmin, vmax):
+        # FIXME: there should be a better way. We may take a look at the
+        # ScalarTickFormatter.
+        dstep = abs(self._vmax - self._vmin) / 100.
+        if dstep > 100:
+            valfmt = "{:.2e}"
+        elif dstep > 1.:
+            valfmt = "{:.0f}"
+        elif dstep > 0.05:
+            valfmt = "{:.1f}"
+        elif dstep > 0.005:
+            valfmt = "{:.2f}"
+        elif dstep > 0.0005:
+            valfmt = "{:.3f}"
+        else:
+            valfmt = "{:e}"
+
+        return valfmt
+
     def __init__(self, wid, width, height,
                  valmin=0, valmax=1, valinit=0.5, valfmt=None,
                  label=None, tooltip=None, label_width=None,
@@ -237,6 +256,9 @@ class SliderWidget(CompositeAxesWidgetBase):
         self._vmin = valmin
         self._vmax = valmax
         self._vinit = valinit
+        if valfmt is None:
+            valfmt = self._get_default_fmt(valmin, valmax)
+
         self._vfmt = "{}" if valfmt is None else valfmt
 
         self._label = label
@@ -308,16 +330,12 @@ class SliderWidget(CompositeAxesWidgetBase):
             self._value_overlay.set_text(s)
 
     def _make_box(self, ax):
+
         _box = Slider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
         _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
 
         self.update_value(self._vinit)
-        # if self._value_label is not None:
-        #     self._value_label.set_label(self._vfmt.format(self._vinit))
-
-        # if self.axes_widget.tooltip is not None:
-        #     self.axes_widget.get_tooltip_textarea().set_text(self._vfmt.format(value))
 
         return _box
 
