@@ -56,6 +56,9 @@ class BaseWidget(PaddedBox):
         else:
             self.tooltip = None
 
+    def get_tooltip_textarea(self):
+        return self.tooltip.get_children()[0]
+
     def get_event_area(self, renderer):
         bb = self.patch.get_window_extent(renderer)
 
@@ -83,6 +86,7 @@ class BaseWidget(PaddedBox):
             c.set_offset((px + ox, py + oy))
 
     def draw(self, renderer):
+        # FIXME: I don't think this method is called by others.
         super().draw(renderer)
         if self.tooltip is not None and self._mouse_on:
             # delayed draw method

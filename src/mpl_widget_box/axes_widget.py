@@ -1,14 +1,15 @@
 from abc import abstractmethod
 
 from matplotlib.axes import Axes
+from matplotlib.text import Text
 from matplotlib.font_manager import FontProperties
 from matplotlib import rcParams
 from matplotlib.offsetbox import DrawingArea
 from matplotlib.transforms import Bbox, TransformedBbox
 
-from matplotlib.widgets import TextBox, Slider
+from matplotlib.widgets import TextBox, Slider, RangeSlider
 
-from .widgets import BaseWidget, Label, HWidgets
+from .widgets import BaseWidget, Label, HWidgets, MouseOverEvent
 
 from .composite_widget import CompositeWidget
 
@@ -68,12 +69,15 @@ class DrawingAreaBase(DrawingArea):
             else self._offset
         )
 
+    def draw_delayed(self, renderer):
+        super().draw(renderer)
+
     def draw(self, renderer):
         """
         Draw the children
         """
 
-        pass
+        # super().draw(renderer)
 
 
 class AxesWidget(BaseWidget):
@@ -115,9 +119,29 @@ class AxesWidget(BaseWidget):
     def purge_background(self):
         pass
 
+    def handle_event(self, event, parent=None):
+        if event.name == "motion_notify_event":
+            return self.handle_motion_notify(event, parent)
+
+    def handle_motion_notify(self, event, parent=None):
+        auxinfo = {}
+        if self._mouse_on == False:
+            self._mouse_on = True
+            auxinfo["mouse_entered"] = True
+
+        return MouseOverEvent(event, self.wid, self, auxinfo=auxinfo)
+
+    def set_mouse_leave(self):
+        self._mouse_on = False
+
     def draw(self, renderer):
         # self.box.draw(renderer)
+
         self.ax.draw_artist(self.ax)
+        if not self._mouse_on:
+            self.child_box.draw_delayed(renderer)
+            # delayed_artists.append(self.child_box.draw_delayed)
+
         # ax.draw_artist(renderer)
 
     def set_cb_get_status(self, cb):
@@ -131,7 +155,7 @@ class AxesWidget(BaseWidget):
 
 
 class CompositeAxesWidgetBase(CompositeWidget):
-    def __init__(self, wid, width, height, label=None) -> None:
+    def __init__(self, wid, width, height, label=None, axes_tooltip=None) -> None:
         self.axes_widget = AxesWidget(
             wid,
             width=width,
@@ -139,7 +163,7 @@ class CompositeAxesWidgetBase(CompositeWidget):
             pad=0.0,
             draw_frame=False,
             patch_attrs=None,
-            tooltip=None,
+            tooltip=axes_tooltip,
             expand=True,
         )
         self._label = label
@@ -200,6 +224,106 @@ class TextAreaWidget(CompositeAxesWidgetBase):
 class SliderWidget(CompositeAxesWidgetBase):
     def __init__(self, wid, width, height,
                  valmin=0, valmax=1, valinit=0.5, valfmt=None,
+                 label=None, tooltip=None, label_width=None,
+                 value_tooltip_on=True,
+                 value_overlay_on=True,
+                 value_label_on=False) -> None:
+
+        axes_tooltip = "" if value_tooltip_on else None
+
+        super().__init__(wid, width, height, label=label,
+                         axes_tooltip=axes_tooltip)
+        self._vmin = valmin
+        self._vmax = valmax
+        self._vinit = valinit
+        self._vfmt = "{}" if valfmt is None else valfmt
+
+        self._label = label
+        self._label_width = label_width
+
+        self._value_label_on = value_label_on
+        self._value_tooltip_on = value_tooltip_on
+        self._value_overlay_on = value_overlay_on
+
+        self._value_label = None
+        self._value_overlay = None
+
+        self._tooltip = tooltip
+
+    def cb(self, value):
+        # if self.axes_widget.tooltip is not None:
+        #     self.axes_widget.get_tooltip_textarea().set_text(self._vfmt.format(value))
+        #     # print(self.get_tooltip_textarea().get_text())
+
+        # if self._value_label is not None:
+        #     self._value_label.set_label(self._vfmt.format(value))
+
+        self.update_value(value)
+
+        status = self._wbm.get_named_status()
+        self._wbm._callback(self._wbm, None, status)
+
+    def build_widgets(self):
+
+        if self._value_overlay_on:
+            w = self.axes_widget.child_box
+
+            from matplotlib.patches import Rectangle
+            rect = Rectangle((0, 0), w.width, w.height, ec="none", fc="w",
+                             alpha=0.4)
+            w.add_artist(rect)
+
+            self._value_overlay = Text(w.width*0.5, w.height*0.5, "",
+                     ha="center", va="center")
+            w.add_artist(self._value_overlay)
+
+        if self._label is not None:
+            _r = [Label("label", self._label, tooltip=self._tooltip,
+                        fixed_width=self._label_width)]
+        else:
+            _r = []
+
+        _r.append(self.axes_widget)
+
+        if self._value_label_on:
+            self._value_label = Label("value", "")
+            _r.append(self._value_label)
+
+        r = [HWidgets(_r, align="center")]
+        return r
+
+    def update_value(self, v):
+        s = self._vfmt.format(v)
+        if self._value_label is not None:
+            self._value_label.set_label(s)
+
+        if self.axes_widget.tooltip is not None:
+            self.axes_widget.get_tooltip_textarea().set_text(s)
+
+        if self._value_overlay is not None:
+            self._value_overlay.set_text(s)
+
+    def _make_box(self, ax):
+        _box = Slider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
+        _box.valtext.set_visible(False)
+        _box.on_changed(self.cb)
+
+        self.update_value(self._vinit)
+        # if self._value_label is not None:
+        #     self._value_label.set_label(self._vfmt.format(self._vinit))
+
+        # if self.axes_widget.tooltip is not None:
+        #     self.axes_widget.get_tooltip_textarea().set_text(self._vfmt.format(value))
+
+        return _box
+
+    def _get_status(self, box):
+        return dict(val=box.val)
+
+
+class RangeSliderWidget(SliderWidget):
+    def __init__(self, wid, width, height,
+                 valmin=0, valmax=1, valinit=0.5, valfmt=None,
                  label=None, tooltip=None) -> None:
         super().__init__(wid, width, height, label=label)
         self._vmin = valmin
@@ -210,11 +334,12 @@ class SliderWidget(CompositeAxesWidgetBase):
         self._tooltip = tooltip
 
     def cb(self, value):
-        if self._value_label is not None:
-            self._value_label.set_label(self._vfmt.format(value))
+        pass
+        # if self._value_label is not None:
+        #     self._value_label.set_label(self._vfmt.format(value))
 
-        status = self._wbm.get_named_status()
-        self._wbm._callback(self._wbm, None, status)
+        # status = self._wbm.get_named_status()
+        # self._wbm._callback(self._wbm, None, status)
 
     def build_widgets(self):
         if self._label is None:
@@ -233,18 +358,17 @@ class SliderWidget(CompositeAxesWidgetBase):
         return r
 
     def _make_box(self, ax):
-        _box = Slider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
-        _box.valtext.set_visible(False)
+        _box = RangeSlider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
+        # _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
 
-        if self._value_label is not None:
-            self._value_label.set_label(self._vfmt.format(self._vinit))
+        # if self._value_label is not None:
+        #     self._value_label.set_label(self._vfmt.format(self._vinit))
 
         return _box
 
     def _get_status(self, box):
         return dict(val=box.val)
-
 
 class CompositeAxesWidget(CompositeAxesWidgetBase):
     def __init__(self, wid, width, height, label=None) -> None:
