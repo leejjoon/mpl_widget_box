@@ -9,7 +9,8 @@ from matplotlib.transforms import Bbox, TransformedBbox
 
 from matplotlib.widgets import TextBox, Slider, RangeSlider
 
-from .widgets import BaseWidget, Label, HWidgets, MouseOverEvent
+from .widgets import (BaseWidget, Label, HWidgets, MouseOverEvent,
+                      WidgetBoxEvent)
 
 from .composite_widget import CompositeWidget
 
@@ -261,7 +262,10 @@ class SliderWidget(CompositeAxesWidgetBase):
         self.update_value(value)
 
         status = self._wbm.get_named_status()
-        self._wbm._callback(self._wbm, None, status)
+        e = WidgetBoxEvent(None, self.axes_widget.wid,
+                           auxinfo=None, callback_info=None)
+
+        self._wbm._callback(self._wbm, e, status)
 
     def build_widgets(self):
 

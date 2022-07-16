@@ -246,6 +246,9 @@ class VPacker(DrawWithDelayed, _VPacker):
 
         return outer_bbox
 
+    def handle_motion_notify(self, event, parent):
+        pass
+
 
 class HPacker(DrawWithDelayed, _HPacker):
     def get_event_area(self, renderer):
@@ -261,6 +264,9 @@ class HPacker(DrawWithDelayed, _HPacker):
         outer_bbox = mtransforms.Bbox.from_bounds(cb.xmin, bottom, cb.width, h)
 
         return outer_bbox
+
+    def handle_motion_notify(self, event, parent):
+        pass
 
 
 class HWidgets(PackedWidgetBase, HPacker):
@@ -944,7 +950,7 @@ class ButtonBar(Radio):
     def __init__(
         self, wid, labels, selected=None, values=None, tooltips=None, title=None, pad=3
     ):
-        self.selected = self.get_initial_selected(selected)
+        # self.selected = self.get_initial_selected(selected)
 
         self.wid = wid
 
@@ -962,7 +968,8 @@ class ButtonBar(Radio):
         WidgetBoxEventHandlerBase.__init__(self, box)
 
         self._update_patch(self.patch)
-        self.select(selected)
+
+        self.initialize_selections(selected)
 
     def select(self, i):
         if i is None:
