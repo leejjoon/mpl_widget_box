@@ -672,7 +672,8 @@ class WidgetBoxBase:
 
         self.dir = dir
 
-        self.init_widgets()
+        # init_widgets method will be called later during install phase.
+        # self.init_widgets()
 
     def init_widgets(self, widgets=None):
 
