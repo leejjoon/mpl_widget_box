@@ -6,7 +6,7 @@ from matplotlib.offsetbox import (
     OffsetBox,
     AnnotationBbox,
     DrawingArea,
-    TextArea,
+    TextArea as _TextArea,
     OffsetImage,
     # HPacker,
     # VPacker,
@@ -25,6 +25,25 @@ from .fa_helper import FontAwesome
 
 fa_icons = FontAwesome.icons
 get_icon_fontprop = FontAwesome.get_fontprop
+
+# TextArea with optional fixed width
+class TextArea(_TextArea):
+    def __init__(self, s, textprops=None, multilinebaseline=False,
+                 fixed_width=None):
+        super().__init__(s, textprops=textprops,
+                         multilinebaseline=multilinebaseline)
+        self._fixed_width = fixed_width
+
+    def set_fixed_width(self, width):
+        # FIXME: we may workaround the dpi dependency.
+        self._fixed_width = width
+
+    def get_extent(self, renderer):
+        w, h, xd, yd = super().get_extent(renderer)
+        if self._fixed_width is not None:
+            w = self._fixed_width
+
+        return w, h, xd, yd
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
 
@@ -345,9 +364,9 @@ class LabelBase(NamedWidget):
         self._mouse_on = False
 
 
-def _build_box_n_textbox(label, textprops):
+def _build_box_n_textbox(label, textprops, width=None):
     if isinstance(label, str):
-        box = TextArea(label, textprops=textprops)
+        box = TextArea(label, textprops=textprops, fixed_width=width)
         textbox = box
     elif isinstance(label, OffsetBox):
         box = label
@@ -359,9 +378,11 @@ def _build_box_n_textbox(label, textprops):
 
 
 class Label(LabelBase):
-    def __init__(self, wid, label, pad=None, draw_frame=True, auxinfo=None, **kwargs):
+    def __init__(self, wid, label, pad=None, draw_frame=True,
+                 auxinfo=None, fixed_width=None, **kwargs):
 
-        box, textbox = _build_box_n_textbox(label, self._get_textprops())
+        box, textbox = _build_box_n_textbox(label, self._get_textprops(),
+                                            width=fixed_width)
         LabelBase.__init__(
             self,
             wid,
