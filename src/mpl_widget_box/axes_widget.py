@@ -304,7 +304,8 @@ class SliderWidget(CompositeAxesWidgetBase):
             w.add_artist(self._value_overlay)
 
         if self._label is not None:
-            _r = [Label("label", self._label, tooltip=self._tooltip,
+            _r = [Label(self.axes_widget.wid+":label", self._label,
+                        tooltip=self._tooltip,
                         fixed_width=self._label_width)]
         else:
             _r = []
@@ -312,7 +313,7 @@ class SliderWidget(CompositeAxesWidgetBase):
         _r.append(self.axes_widget)
 
         if self._value_label_on:
-            self._value_label = Label("value", "")
+            self._value_label = Label(self.axes_widget.wid+"value", "")
             _r.append(self._value_label)
 
         r = [HWidgets(_r, align="center")]
@@ -344,53 +345,28 @@ class SliderWidget(CompositeAxesWidgetBase):
 
 
 class RangeSliderWidget(SliderWidget):
-    def __init__(self, wid, width, height,
-                 valmin=0, valmax=1, valinit=0.5, valfmt=None,
-                 label=None, tooltip=None) -> None:
-        super().__init__(wid, width, height, label=label)
-        self._vmin = valmin
-        self._vmax = valmax
-        self._vinit = valinit
-        self._vfmt = "{}" if valfmt is None else valfmt
-        self._value_label = None
-        self._tooltip = tooltip
-
-    def cb(self, value):
-        pass
-        # if self._value_label is not None:
-        #     self._value_label.set_label(self._vfmt.format(value))
-
-        # status = self._wbm.get_named_status()
-        # self._wbm._callback(self._wbm, None, status)
-
-    def build_widgets(self):
-        if self._label is None:
-            r = [self.axes_widget]
-        else:
-            self._value_label = Label("value", "")
-            r = [
-                HWidgets(
-                    children=[Label("label", self._label,
-                                    tooltip=self._tooltip),
-                              self.axes_widget,
-                              self._value_label],
-                    align="center",
-                )
-            ]
-        return r
 
     def _make_box(self, ax):
         _box = RangeSlider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
-        # _box.valtext.set_visible(False)
+        _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
-
-        # if self._value_label is not None:
-        #     self._value_label.set_label(self._vfmt.format(self._vinit))
 
         return _box
 
-    def _get_status(self, box):
-        return dict(val=box.val)
+    def update_value(self, v):
+        s0 = self._vfmt.format(v[0])
+        s1 = self._vfmt.format(v[1])
+        s = f"{s0}, {s1}"
+
+        if self._value_label is not None:
+            self._value_label.set_label(s)
+
+        if self.axes_widget.tooltip is not None:
+            self.axes_widget.get_tooltip_textarea().set_text(s)
+
+        if self._value_overlay is not None:
+            self._value_overlay.set_text(s)
+
 
 class CompositeAxesWidget(CompositeAxesWidgetBase):
     def __init__(self, wid, width, height, label=None) -> None:
