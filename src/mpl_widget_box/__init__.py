@@ -5,7 +5,8 @@ from .widget_box import WidgetBoxManager
 __all__ = ["install_widgets_simple", "WidgetBoxManager"]
 
 
-def install_widgets_simple(ax, widgets, cb=None, loc=2):
+def install_widgets_simple(ax, widgets, cb=None, loc=2,
+                           add_to_subfigs=True):
 
     wbm = WidgetBoxManager(ax.figure)
 
@@ -19,6 +20,8 @@ def install_widgets_simple(ax, widgets, cb=None, loc=2):
         wbm.set_callback(cb)
 
     wbm.install_all()
+
+    wbm.append_to_subfigs(ax.figure)
     wbm.draw_idle()
 
     return wbm

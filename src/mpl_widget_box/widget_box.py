@@ -424,6 +424,24 @@ class WidgetBoxManager:
             if w is not None:
                 return w
 
+    # This is a hack for the widgets to get removed when the figure is cleared
+    # (clf), We will add the manager as a subfigure of the figure. When the
+    # figure is cleared, the clear method of the subfigures are also called. On
+    # the other hand, we also need to define the draw and get_children method
+    # which does nothing.
+
+    def draw(self, renderer):
+        pass
+
+    def get_children(self):
+        return []
+
+    def clear(self, keep_observers=None):
+        self.uninstall_all()
+
+    def append_to_subfigs(self, fig):
+        fig.subfigs.append(self)
+
     # containers can have multiple widget_boxes.
 
 
