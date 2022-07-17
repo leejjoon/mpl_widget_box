@@ -211,6 +211,17 @@ class WidgetBoxManager:
 
         self.fig.canvas.draw_idle()
 
+    def uninstall_all(self):
+
+        for zorder, wc in self._container_list:
+            if wc.installed():
+                wc.uninstall(self)
+
+        for cid in self._cid_list.values():
+            self.fig.canvas.mpl_disconnect(cid)
+
+        self.fig.canvas.draw_idle()
+
     def handle_callback(self, event, e):
         wid = e.wid
         callback_info = e.callback_info
@@ -553,7 +564,6 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
 
     def uninstall(self, wbm):
         super().uninstall(wbm)
-        self.ax = None
 
     def reinit_widget_box(self, wbm, widgets):
         wb = self.get_widget_box()
