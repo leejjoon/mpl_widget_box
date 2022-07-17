@@ -247,7 +247,8 @@ class SliderWidget(CompositeAxesWidgetBase):
                  label=None, tooltip=None, label_width=None,
                  value_tooltip_on=True,
                  value_overlay_on=True,
-                 value_label_on=False) -> None:
+                 value_label_on=False,
+                 overlay_alpha=0.6) -> None:
 
         axes_tooltip = "" if value_tooltip_on else None
 
@@ -271,6 +272,7 @@ class SliderWidget(CompositeAxesWidgetBase):
         self._value_label = None
         self._value_overlay = None
 
+        self._overlay_alpha = overlay_alpha
         self._tooltip = tooltip
 
     def cb(self, value):
@@ -296,7 +298,7 @@ class SliderWidget(CompositeAxesWidgetBase):
 
             from matplotlib.patches import Rectangle
             rect = Rectangle((0, 0), w.width, w.height, ec="none", fc="w",
-                             alpha=0.4)
+                             alpha=self._overlay_alpha)
             w.add_artist(rect)
 
             self._value_overlay = Text(w.width*0.5, w.height*0.5, "",
@@ -336,7 +338,7 @@ class SliderWidget(CompositeAxesWidgetBase):
         _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
 
-        self.update_value(self._vinit)
+        self.update_value(_box.valinit)
 
         return _box
 
@@ -350,6 +352,8 @@ class RangeSliderWidget(SliderWidget):
         _box = RangeSlider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
         _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
+
+        self.update_value(_box.valinit)
 
         return _box
 
