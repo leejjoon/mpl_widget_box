@@ -6,15 +6,21 @@ authors = ["Jae-Joon Lee <lee.j.joon@gmail.com>"]
 license = "BSD"
 
 [tool.poetry.dependencies]
-python = ">3.7"
+python = ">=3.7"
 matplotlib = "^3"
-rapidyaml = "^0.4"
-astropy = ">5.0"
-fontawesomefree = ">6.1"
+#rapidyaml = "^0.4"
+astropy = ">=4.0"
+fontawesomefree = ">=6.1"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.4"
+pytest = "^7.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
