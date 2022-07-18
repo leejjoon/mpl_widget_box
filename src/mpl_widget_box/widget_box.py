@@ -319,6 +319,12 @@ class WidgetBoxManager:
         event_inside = self.check_event_area(event)
 
         if not event_inside:
+            # we need remove the tooltips and redraw if they are still on.
+            if self._mouse_owner is not None:
+                self._mouse_owner.set_mouse_leave()
+                self._mouse_owner = None
+                self.draw_widgets(event)
+
             return
 
         for zorder, c in reversed(
