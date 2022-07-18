@@ -91,7 +91,7 @@ def cb(wb, ev, status):
             menu_widget,
             *subwidgets
         ]
-        wc.reinit_widget_box(wbm, wb, widgets)
+        wc.reinit_widget_box(wbm, widgets)
 
     # print(ev, status)
 

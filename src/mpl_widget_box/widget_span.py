@@ -1,8 +1,9 @@
-from matplotlib.offsetbox import HPacker, TextArea
 from matplotlib import rcParams
+from matplotlib.offsetbox import TextArea
 from matplotlib.widgets import SpanSelector as _SpanSelector
 
 from .fa_helper import FontAwesome
+
 fa_icons = FontAwesome.icons
 
 from .widgets import get_icon_fontprop
@@ -11,6 +12,7 @@ from .widgets import (
     Radio,
     HWidgets,
     Button,
+    HPacker
 )
 
 from .composite_widget import CompositeWidget
@@ -176,7 +178,7 @@ class SpanSelectors(Span, CompositeWidget):
             if (x1, x2) == (0, 0):
                 return
             self.extents_dict[status[sel]["value"]] = x1, x2
-            i = status[sel]["selected"][0]
+            i = status[sel]["selected"]
             self._update_selector_label(i, x1, x2)
 
         elif ev.wid == self._prefixed_name("purge"):
