@@ -156,27 +156,51 @@ class AxesWidget(BaseWidget):
 
 
 class CompositeAxesWidgetBase(CompositeWidget):
-    def __init__(self, wid, width, height, label=None, axes_tooltip=None) -> None:
-        self.axes_widget = AxesWidget(
+    def __init__(self, wid, width, height,
+                 label=None, label_width=None, tooltip=None,
+                 axes_tooltip=None) -> None:
+        self.axes_widget_ka = dict(wid=wid,
+                                   width=width,
+                                   height=height, tooltip=axes_tooltip)
+        self.axes_widget = None
+        self._wbm = None
+
+        self._label = label
+        self._label_width = label_width
+        self._tooltip = tooltip
+
+    def _build_axes_widget(self):
+        axes_widget_ka = self.axes_widget_ka.copy()
+        wid = axes_widget_ka.pop("wid")
+
+        r = AxesWidget(
             wid,
-            width=width,
-            height=height,
             pad=0.0,
             draw_frame=False,
             patch_attrs=None,
-            tooltip=axes_tooltip,
             expand=True,
+            **axes_widget_ka
         )
-        self._label = label
-        self._wbm = None
+        return r
 
     def build_widgets(self):
+        self.axes_widget = self._build_axes_widget()
+
+        return self._build_widgets()
+
+    def _build_label(self):
+        _r = Label(self.axes_widget.wid+":label", self._label,
+                   tooltip=self._tooltip,
+                   fixed_width=self._label_width)
+        return _r
+
+    def _build_widgets(self):
         if self._label is None:
             r = [self.axes_widget]
         else:
             r = [
                 HWidgets(
-                    children=[Label("label", self._label), self.axes_widget],
+                    children=[self._build_label(), self.axes_widget],
                     align="center",
                 )
             ]
@@ -210,12 +234,19 @@ class CompositeAxesWidgetBase(CompositeWidget):
 
 
 class TextAreaWidget(CompositeAxesWidgetBase):
-    def __init__(self, wid, width, height, initial_text="", label=None) -> None:
-        super().__init__(wid, width, height, label=label)
+    def __init__(self, wid, initial_text="",
+                 width=60, height=16,
+                 label=None, label_width=None, tooltip=None,
+                 ) -> None:
+        super().__init__(wid, width, height,
+                         label=label, label_width=label_width,
+                         tooltip=tooltip)
         self._initial_text = initial_text
+        # self._label_width = label_width
 
     def _make_box(self, ax):
         _box = TextBox(ax, "", label_pad=0, initial=self._initial_text)
+                       # fixed_width=self._label_width)
         return _box
 
     def _get_status(self, box):
@@ -242,8 +273,9 @@ class SliderWidget(CompositeAxesWidgetBase):
 
         return valfmt
 
-    def __init__(self, wid, width, height,
-                 valmin=0, valmax=1, valinit=0.5, valfmt=None,
+    def __init__(self, wid, valmin, valmax,
+                 valinit=None, width=60, height=20,
+                 valfmt=None,
                  label=None, tooltip=None, label_width=None,
                  value_tooltip_on=True,
                  value_overlay_on=True,
@@ -252,7 +284,8 @@ class SliderWidget(CompositeAxesWidgetBase):
 
         axes_tooltip = "" if value_tooltip_on else None
 
-        super().__init__(wid, width, height, label=label,
+        super().__init__(wid, width, height,
+                         label=label, label_width=label_width, tooltip=tooltip,
                          axes_tooltip=axes_tooltip)
         self._vmin = valmin
         self._vmax = valmax
@@ -262,9 +295,6 @@ class SliderWidget(CompositeAxesWidgetBase):
 
         self._vfmt = "{}" if valfmt is None else valfmt
 
-        self._label = label
-        self._label_width = label_width
-
         self._value_label_on = value_label_on
         self._value_tooltip_on = value_tooltip_on
         self._value_overlay_on = value_overlay_on
@@ -273,7 +303,6 @@ class SliderWidget(CompositeAxesWidgetBase):
         self._value_overlay = None
 
         self._overlay_alpha = overlay_alpha
-        self._tooltip = tooltip
 
     def cb(self, value):
         # if self.axes_widget.tooltip is not None:
@@ -291,7 +320,7 @@ class SliderWidget(CompositeAxesWidgetBase):
 
         self._wbm._callback(self._wbm, e, status)
 
-    def build_widgets(self):
+    def _build_widgets(self):
 
         if self._value_overlay_on:
             w = self.axes_widget.child_box
@@ -305,12 +334,9 @@ class SliderWidget(CompositeAxesWidgetBase):
                      ha="center", va="center")
             w.add_artist(self._value_overlay)
 
+        _r = []
         if self._label is not None:
-            _r = [Label(self.axes_widget.wid+":label", self._label,
-                        tooltip=self._tooltip,
-                        fixed_width=self._label_width)]
-        else:
-            _r = []
+            _r.append(self._build_label())
 
         _r.append(self.axes_widget)
 
@@ -334,7 +360,9 @@ class SliderWidget(CompositeAxesWidgetBase):
 
     def _make_box(self, ax):
 
-        _box = Slider(ax, "", self._vmin, self._vmax, valinit=self._vinit)
+        valinit = (0.5*(self._vmin+self._vmax) if self._vinit is None
+                   else self._vinit)
+        _box = Slider(ax, "", self._vmin, self._vmax, valinit=valinit)
         _box.valtext.set_visible(False)
         _box.on_changed(self.cb)
 
