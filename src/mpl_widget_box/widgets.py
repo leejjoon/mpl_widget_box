@@ -135,7 +135,7 @@ class WidgetBoxEvent:
         self.container_info = {}
 
     def __repr__(self):
-        return f"Event: {self.wid} {self.auxinfo}"
+        return f"Event: {self.wid} {self.auxinfo} {self.container_info}"
 
 
 class MouseOverEvent(WidgetBoxEvent):

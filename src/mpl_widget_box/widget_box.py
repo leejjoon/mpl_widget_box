@@ -36,12 +36,9 @@ class AnnotationBbox(_AnnotationBbox):
         if not self.get_visible() or not self._check_xy(renderer):
             return
         self.update_positions(renderer)
-        if self.arrow_patch is not None:
-            if self.arrow_patch.figure is None and self.figure is not None:
-                self.arrow_patch.figure = self.figure
-            self.arrow_patch.draw(renderer)
         self.patch.draw(renderer)
-        delayed_draws = self.offsetbox.draw(renderer)
+        delayed_draws = self.offsetbox.draw(renderer) # draw method will return
+                                                      # delayed draw methods.
         self.stale = False
 
         return delayed_draws
@@ -443,6 +440,9 @@ class WidgetBoxManager:
     def get_children(self):
         return []
 
+    def pick(self, mouseevent):
+        pass
+
     def clear(self, keep_observers=None):
         self.uninstall_all()
 
@@ -838,6 +838,9 @@ class AnchoredWidgetBox(WidgetBoxBase):
                 children=widgets,
                 pad=1,
                 sep=2,
+                align="left", # the default is baseline which depends on
+                              # xdescent. While this is okay in general, this
+                              # may introduce offset shift when collapsed.
             )
             box = HPacker(children=[_pack], pad=0, sep=0)
 

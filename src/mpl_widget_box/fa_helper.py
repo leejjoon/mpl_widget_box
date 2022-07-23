@@ -93,6 +93,7 @@ def main():
     icons_all = FontAwesome.load_icons_yaml()
     kl = [
         "plus",
+        "caret-up",
         "caret-down",
         "angles-right",
         "circle-dot",

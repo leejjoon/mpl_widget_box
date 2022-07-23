@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from mpl_widget_box import (widgets as W,
                             install_widgets_simple)
+from mpl_widget_box.composite_widget import TitleCollapsable
 
 
 def main():
@@ -17,13 +18,7 @@ def main():
     ]
 
     widgets = [
-        W.HWidgets(
-            [
-                W.Title("title0", "My Widgets"),
-                W.Button("btn1", "X"),
-            ]
-        ),
-        W.Title("title0", "My Widgets"),
+        TitleCollapsable("title-collapse", "My Widget"),
         W.Button("btn1", "Click", mode="center", tooltip="Tooltip"),
         W.HWidgets([W.Button("btn2", "A"), W.Button("btn3", "B")]),
         W.CheckBox("check", ["1", "2", "3"], direction="h"),
@@ -38,8 +33,11 @@ def main():
             align="baseline",
         ),
     ]
+    title = widgets[0]
 
-    def cb(wb, ev, status):
+    def cb(wbm, ev, status):
+        title.process_event(wbm, ev, status)
+
         print(ev, status)
 
     wbm = install_widgets_simple(ax, widgets, cb=cb, loc=2)
