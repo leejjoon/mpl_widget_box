@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import List
+from . import widgets as W
+from ._abc import CompositeWidgetBase
 
-from .widgets import BaseWidget
 
 
 class CompositeWidget(ABC):

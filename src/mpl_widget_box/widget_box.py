@@ -20,7 +20,7 @@ import numpy as np
 
 from .widgets import MouseOverEvent
 from .widgets import HPacker, VPacker, HWidgets, PackedWidgetBase
-from .composite_widget import CompositeWidget
+from ._abc import CompositeWidgetBase
 
 from .event_handler import WidgetsEventHandler
 
@@ -715,7 +715,7 @@ class WidgetBoxBase:
 
         _widgets = []
         for w in widgets:
-            if isinstance(w, CompositeWidget):
+            if isinstance(w, CompositeWidgetBase):
                 _widgets.extend(w.build_widgets())
                 self._post_install_hook.append(w.post_install)
                 self._post_uninstall_hook.append(w.post_uninstall)

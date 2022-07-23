@@ -15,7 +15,7 @@ from .widgets import (
     HPacker
 )
 
-from .composite_widget import CompositeWidget
+from ._abc import CompositeWidgetBase
 
 
 class SpanSelector(_SpanSelector):
@@ -79,7 +79,7 @@ class Span:
         self.span.purge_background()
 
 
-class SpanSelectors(Span, CompositeWidget):
+class SpanSelectors(Span, CompositeWidgetBase):
     def __init__(self, ax, rootname, labels=[], values=None):
         Span.__init__(self, ax)
         self.rootname = rootname

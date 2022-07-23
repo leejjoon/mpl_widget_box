@@ -12,7 +12,7 @@ from matplotlib.widgets import TextBox, Slider, RangeSlider
 from .widgets import (BaseWidget, Label, HWidgets, MouseOverEvent,
                       WidgetBoxEvent)
 
-from .composite_widget import CompositeWidget
+from ._abc import CompositeWidgetBase
 
 
 class OffsetBoxLocator:
@@ -155,7 +155,7 @@ class AxesWidget(BaseWidget):
             return {}
 
 
-class CompositeAxesWidgetBase(CompositeWidget):
+class CompositeAxesWidgetBase(CompositeWidgetBase):
     def __init__(self, wid, width, height,
                  label=None, label_width=None, tooltip=None,
                  axes_tooltip=None) -> None:

@@ -7,7 +7,7 @@ from matplotlib.offsetbox import (
 from matplotlib.image import BboxImage
 
 from .. import widgets as W, WidgetBoxManager
-from ..composite_widget import CompositeWidget
+from .._abc import CompositeWidgetBase
 from .matplotlib_colormaps import get_matplotlib_cmaps
 
 try:
@@ -49,7 +49,7 @@ def get_colormap_widgets(cmaps, kind):
     return sub_widgets, cmaps[kind][1]
 
 
-class CbarSelectorWidget(CompositeWidget):
+class CbarSelectorWidget(CompositeWidgetBase):
     def _prefixed_name(self, n):
         return f"{self.rootname}:{n}"
 
