@@ -263,21 +263,26 @@ class Button(LabelBase):
         return self.button_box.patch
 
     def __init__(
-        self,
-        wid,
-        label,
-        pad=3.0,
-        draw_frame=True,
-        centered=False,
-        contextual_themes=None,
-        expand=False,
-        **kwargs,
+            self,
+            wid,
+            label,
+            pad=3.0,
+            mode=None,
+            draw_frame=True,
+            contextual_themes=None,
+            **kwargs,
     ):
 
         self._context = ""
         self._contextual_themes = {} if contextual_themes is None else contextual_themes
 
         box, textbox = _build_box_n_textbox(label, self._get_textprops())
+
+        if mode not in ["expand", "center", None]:
+            raise ValueError(f"Unknown value of mode '{mode}'")
+
+        expand = True if mode == "expand" else False
+        centered = True if mode == "center" else False
 
         if centered:
             self.button_box = Centered(box, pad=pad, draw_frame=draw_frame)
@@ -292,7 +297,7 @@ class Button(LabelBase):
             textbox=textbox,
             pad=3,
             draw_frame=False,
-            expand=expand,
+            # expand=expand,
             **kwargs,
         )
 
@@ -526,16 +531,16 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         if isinstance(l, str):
             t = Label("", l)
             t.set_tooltip(tooltip)
-            box = HPacker(
+            box = HWidgets(
                 children=[self.button_off, t], pad=1, sep=2, align="baseline"
             )
         else:
-            box = HPacker(children=[self.button_off, l], pad=1, sep=2, align="baseline")
+            box = HWidgets(children=[self.button_off, l], pad=1, sep=2, align="baseline")
 
         return box
 
     def __init__(self, wid, labels, selected=None, values=None,
-                 title=None, tooltips=None, pad=3):
+                 title=None, tooltips=None, pad=3, direction="v"):
         if tooltips is None:
             tooltips = [None] * len(labels)
 
@@ -562,7 +567,12 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.boxes.extend(self.get_boxes(labels, tooltips=tooltips))
 
         kwargs = {}
-        box = VPacker(children=self.boxes, pad=0, sep=3, **kwargs)
+        if direction == "h":
+            box = HPacker(children=self.boxes, pad=0, sep=3, **kwargs)
+        elif direction == "v":
+            box = VPacker(children=self.boxes, pad=0, sep=3, **kwargs)
+        else:
+            raise ValueError("unknown dir value of '{dir'}")
 
         BaseWidget.__init__(self, box, pad=pad, draw_frame=True)
         WidgetBoxEventHandlerBase.__init__(self, box)
@@ -742,7 +752,7 @@ class CheckBox(Radio):
         )
 
 
-class ButtonBar(Radio):
+class RadioButton(Radio):
     def get_default_box(self, l, tooltip=None):
 
         contextual_themes = {

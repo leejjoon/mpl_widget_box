@@ -6,10 +6,10 @@ from mpl_widget_box import (widgets as W,
                             install_widgets_simple)
 
 
-def test1():
+def main():
 
     fig, ax = plt.subplots(num=2, clear=True)
-    ax.plot(np.random.rand(10))
+    ax.plot([0, 1])
 
     sub_widgets = [
         W.Label("btn4", "-- Label --"),
@@ -17,7 +17,18 @@ def test1():
     ]
 
     widgets = [
+        W.HWidgets(
+            [
+                W.Title("title0", "My Widgets"),
+                W.Button("btn1", "X"),
+            ]
+        ),
         W.Title("title0", "My Widgets"),
+        W.Button("btn1", "Click", mode="center", tooltip="Tooltip"),
+        W.HWidgets([W.Button("btn2", "A"), W.Button("btn3", "B")]),
+        W.CheckBox("check", ["1", "2", "3"], direction="h"),
+        W.Radio("radio", ["Selection 1", "Selection 2"], title="Radio"),
+        W.RadioButton("bar", ["A", "B", "C"]),
         W.Sub("sub1", "Sub", sub_widgets, tooltip="Sub"),
         W.HWidgets(
             [
@@ -26,10 +37,6 @@ def test1():
             ],
             align="baseline",
         ),
-        W.Radio("radio", ["Ag", "Bc"]),
-        W.CheckBox("check", ["1", "2", "3"], title="Check"),
-        W.Button("btn1", "Click", centered=True, tooltip="Tooltip"),
-        W.HWidgets([W.Button("btn2", "A"), W.Button("btn3", "B")]),
     ]
 
     def cb(wb, ev, status):
@@ -42,4 +49,4 @@ def test1():
 
 
 if __name__ == "__main__":
-    test1()
+    main()

@@ -11,6 +11,7 @@ def test1():
 
     widgets = [
         W.CheckBox("check1", ["1", "2"]),
+        W.CheckBox("check1", ["1", "2"], direction="h"),
         W.CheckBox("check2", ["1", "2"],
                    title="Check", selected=[1]),
         W.CheckBox("check3", ["1", "2"], tooltips=["tooltip 1", "tooltip 2"],

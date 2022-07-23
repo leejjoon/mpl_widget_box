@@ -99,7 +99,7 @@ class WidgetBoxManager:
         widgets,
         ax,
         loc=2,
-        dir="v",
+        direction="v",
         zorder=0,
         box_alignment=None,
         bbox_to_anchor=None,
@@ -154,7 +154,7 @@ class WidgetBoxManager:
             xybox=xybox,
             box_alignment=box_alignment,
             # install_args=install_args
-            dir=dir,
+            direction=direction,
             bbox_to_anchor=bbox_to_anchor,
             frameon=frameon,
         )
@@ -337,6 +337,7 @@ class WidgetBoxManager:
             e = None
 
         need_redraw = False
+
         if event.name == "motion_notify_event":
             if isinstance(e, MouseOverEvent):
                 if self._mouse_owner != e.widget:
@@ -610,7 +611,7 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
         xybox=(0, 0),
         box_alignment=(0, 1),
         frameon=True,
-        dir="v",
+        direction="v",
     ):
 
         widget_box = self._make_widget_box(
@@ -620,7 +621,7 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
             xy=xy,
             xybox=xybox,
             box_alignment=box_alignment,
-            dir=dir,
+            direction=direction,
             frameon=frameon,
         )
         super().__init__(widget_box, ax)
@@ -634,7 +635,7 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
         xybox=(0, 0),
         box_alignment=(0, 1),
         frameon=True,
-        dir="v",
+        direction="v",
     ):
 
         _widget_box = AnchoredWidgetBox(
@@ -644,7 +645,7 @@ class AnchoredWidgetContainer(AxesWidgetBoxContainer):
             xy=xy,
             xybox=xybox,
             box_alignment=box_alignment,
-            dir=dir,
+            direction=direction,
             frameon=frameon,
         )
 
@@ -697,14 +698,14 @@ class WidgetBoxBase:
 
         return flattened_widgets
 
-    def __init__(self, widgets, dir="v"):
+    def __init__(self, widgets, direction="v"):
 
         self.widgets_orig = widgets
 
         self._post_install_hook = []
         self._post_uninstall_hook = []
 
-        self.dir = dir
+        self.direction = direction
 
         # init_widgets method will be called later during install phase.
         # self.init_widgets()
@@ -727,7 +728,7 @@ class WidgetBoxBase:
         flattened_widgets = self._get_flattened_widgets(self._widgets)
         self._handler = WidgetsEventHandler(flattened_widgets)
 
-        self.box = self.wrap(_widgets, dir=self.dir)
+        self.box = self.wrap(_widgets, direction=self.direction)
 
     def get_artist(self):
         return self.box
@@ -736,8 +737,8 @@ class WidgetBoxBase:
         bbox = self.box.patch.get_extents()
         return bbox.contains(event.x, event.y)
 
-    def wrap(self, widgets, dir="v"):
-        if dir == "h":
+    def wrap(self, widgets, direction="v"):
+        if direction == "h":
             _pack = HPacker(
                 children=widgets,
                 pad=3,
@@ -812,7 +813,7 @@ class AnchoredWidgetBox(WidgetBoxBase):
         xybox=(0, 0),
         box_alignment=(0, 1),
         frameon=True,
-        dir="v",
+        direction="v",
     ):
 
         install_args = dict(
@@ -826,10 +827,10 @@ class AnchoredWidgetBox(WidgetBoxBase):
         self._install_args = install_args
         self.ax = ax
 
-        super().__init__(widgets, dir=dir)
+        super().__init__(widgets, direction=direction)
 
-    def wrap(self, widgets, dir="v"):
-        if dir == "h":
+    def wrap(self, widgets, direction="v"):
+        if direction == "h":
             _pack = HPacker(children=widgets, pad=1, sep=2, align="bottom")
             box = VPacker(children=[_pack], pad=0, sep=0)
         else:

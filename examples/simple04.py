@@ -30,7 +30,7 @@ subwidgets2 = [
 
 
 widgets = [
-    W.ButtonBar("menu-selector", ["  ", "Buttons", "Radio"],
+    W.RadioButton("menu-selector", ["  ", "Buttons", "Radio"],
                 values=["empty", "menu1", "menu2"]),
 ]
 

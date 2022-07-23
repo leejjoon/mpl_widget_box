@@ -108,7 +108,7 @@ class CbarSelectorWidget(CompositeWidgetBase):
             norm_names = ["linear", "sqrt", "log", "squared"]
             _norm_da = [get_norm_da(c) for c in norm_names]
             norm_buttons = [
-                W.ButtonBar(
+                W.RadioButton(
                     self._prefixed_name("norm-selector"),
                     _norm_da,
                     values=norm_names,

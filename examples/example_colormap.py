@@ -41,7 +41,7 @@ def cb(wbm: WidgetBoxManager, ev: W.WidgetBoxEvent, status):
 
 wbm = WidgetBoxManager(fig)
 wbm.add_anchored_widget_box(widgets1, ax1, loc=2)
-wbm.add_anchored_widget_box(widgets2, ax2, loc=2, dir="h")
+wbm.add_anchored_widget_box(widgets2, ax2, loc=2, direction="h")
 wbm.set_callback(cb)
 wbm.install_all()
 

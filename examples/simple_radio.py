@@ -10,7 +10,8 @@ def test1():
     ax.plot([0, 1])
 
     widgets = [
-        W.Radio("radio1", ["1", "2"], title="Check", selected=1),
+        W.Radio("radio1", ["1", "2"], title="Radio", selected=1),
+        W.Radio("radio1", ["3", "4"], direction="h"),
         W.Radio("radio2", ["a", "b"], values=[1, 2]),
         W.Radio("radio3", ["1", "2"], tooltips=["tooltip 1", "tooltip 2"]),
     ]
