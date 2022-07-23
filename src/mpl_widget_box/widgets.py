@@ -235,6 +235,12 @@ class Label(LabelBase):
             **kwargs,
         )
 
+    def get_event_area(self, renderer):
+        return self.patch.get_window_extent()
+
+    def handle_button_press(self, event, parent=None):
+        return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
+
 
 class ToggleButton(Label):
     pass
