@@ -5,8 +5,7 @@ from .widget_box import WidgetBoxManager
 __all__ = ["install_widgets_simple", "WidgetBoxManager"]
 
 
-def install_widgets_simple(ax, widgets, cb=None, loc=2,
-                           add_to_subfigs=True):
+def install_widgets_simple(ax, widgets, cb=None, loc=2, add_to_subfigs=True):
 
     wbm = WidgetBoxManager(ax.figure)
 

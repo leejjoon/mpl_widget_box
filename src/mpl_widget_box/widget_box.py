@@ -37,8 +37,8 @@ class AnnotationBbox(_AnnotationBbox):
             return
         self.update_positions(renderer)
         self.patch.draw(renderer)
-        delayed_draws = self.offsetbox.draw(renderer) # draw method will return
-                                                      # delayed draw methods.
+        delayed_draws = self.offsetbox.draw(renderer)  # draw method will return
+        # delayed draw methods.
         self.stale = False
 
         return delayed_draws
@@ -411,7 +411,6 @@ class WidgetBoxManager:
         for draw in delayed_draws:
             draw(renderer)
 
-
     def get_named_status(self):
         status = {}
         for zorder, c in self._container_list:
@@ -756,7 +755,6 @@ class WidgetBoxBase:
                 # **kwargs
                 mode="expand",
             )
-
             wrapped = HPacker(children=[_pack], pad=0, sep=0, mode="expand")
 
         return wrapped
@@ -838,9 +836,9 @@ class AnchoredWidgetBox(WidgetBoxBase):
                 children=widgets,
                 pad=1,
                 sep=2,
-                align="left", # the default is baseline which depends on
-                              # xdescent. While this is okay in general, this
-                              # may introduce offset shift when collapsed.
+                align="left",  # the default is baseline which depends on
+                # xdescent. While this is okay in general, this
+                # may introduce offset shift when collapsed.
             )
             box = HPacker(children=[_pack], pad=0, sep=0)
 

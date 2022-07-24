@@ -33,7 +33,6 @@ class Centered(BaseWidget):
             c.set_offset((px + (outer_bbox.width - w) * 0.5 + ox, py + oy))
 
 
-
 class DrawWithDelayed:
     def draw(self, renderer):
         """
@@ -93,7 +92,6 @@ class HPacker(DrawWithDelayed, _HPacker):
         # bbox : bbox of the self
         # cb : bbox of the child
         w, h, xdescent, ydescent, offsets = bbox
-
         bottom = py - ydescent
 
         outer_bbox = mtransforms.Bbox.from_bounds(cb.xmin, bottom, cb.width, h)
@@ -219,11 +217,20 @@ def _build_box_n_textbox(label, textprops, width=None):
 
 
 class Label(LabelBase):
-    def __init__(self, wid, label, pad=None, draw_frame=True,
-                 auxinfo=None, fixed_width=None, **kwargs):
+    def __init__(
+        self,
+        wid,
+        label,
+        pad=None,
+        draw_frame=True,
+        auxinfo=None,
+        fixed_width=None,
+        **kwargs,
+    ):
 
-        box, textbox = _build_box_n_textbox(label, self._get_textprops(),
-                                            width=fixed_width)
+        box, textbox = _build_box_n_textbox(
+            label, self._get_textprops(), width=fixed_width
+        )
         LabelBase.__init__(
             self,
             wid,
@@ -269,14 +276,14 @@ class Button(LabelBase):
         return self.button_box.patch
 
     def __init__(
-            self,
-            wid,
-            label,
-            pad=3.0,
-            mode=None,
-            draw_frame=True,
-            contextual_themes=None,
-            **kwargs,
+        self,
+        wid,
+        label,
+        pad=3.0,
+        mode=None,
+        draw_frame=True,
+        contextual_themes=None,
+        **kwargs,
     ):
 
         self._context = ""
@@ -541,12 +548,23 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
                 children=[self.button_off, t], pad=1, sep=2, align="baseline"
             )
         else:
-            box = HWidgets(children=[self.button_off, l], pad=1, sep=2, align="baseline")
+            box = HWidgets(
+                children=[self.button_off, l], pad=1, sep=2, align="baseline"
+            )
 
         return box
 
-    def __init__(self, wid, labels, selected=None, values=None,
-                 title=None, tooltips=None, pad=3, direction="v"):
+    def __init__(
+        self,
+        wid,
+        labels,
+        selected=None,
+        values=None,
+        title=None,
+        tooltips=None,
+        pad=3,
+        direction="v",
+    ):
         if tooltips is None:
             tooltips = [None] * len(labels)
 

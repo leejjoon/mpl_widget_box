@@ -8,12 +8,7 @@ fa_icons = FontAwesome.icons
 
 from .widgets import get_icon_fontprop
 
-from .widgets import (
-    Radio,
-    HWidgets,
-    Button,
-    HPacker
-)
+from .widgets import Radio, HWidgets, Button, HPacker
 
 from ._abc import CompositeWidgetBase
 

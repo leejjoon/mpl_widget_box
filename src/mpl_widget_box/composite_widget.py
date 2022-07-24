@@ -6,6 +6,7 @@ from .fa_icons import fa_icons
 
 from .fa_helper import FontAwesome
 from .base_widget import TextArea
+
 get_icon_fontprop = FontAwesome.get_fontprop
 
 
@@ -34,13 +35,15 @@ class TitleCollapsable(CompositeWidgetBase):
     def build_widgets(self):
 
         self._button = W.Label(f"{self.wid}:btn", self.button_collapse)
-        r = W.HWidgets(
-            [
-                W.Title(f"{self.wid}:title", self.title),
-                self._button,
-            ],
-            align="baseline"
-        ),
+        r = [
+            W.HWidgets(
+                [
+                    W.Title(f"{self.wid}:title", self.title),
+                    self._button,
+                ],
+                align="baseline",
+            ),
+        ]
         return r
 
     def post_install(self, wbm):

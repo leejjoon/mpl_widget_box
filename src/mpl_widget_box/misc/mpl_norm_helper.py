@@ -44,5 +44,3 @@ def get_norm_da(norm_name, w=10, h=10):
     da.add_artist(l)
 
     return da
-
-

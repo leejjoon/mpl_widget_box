@@ -1,4 +1,3 @@
-
 import matplotlib.transforms as mtransforms
 from matplotlib.offsetbox import PaddedBox
 from matplotlib.offsetbox import (
@@ -9,10 +8,8 @@ from matplotlib.offsetbox import (
 
 # TextArea with optional fixed width
 class TextArea(_TextArea):
-    def __init__(self, s, textprops=None, multilinebaseline=False,
-                 fixed_width=None):
-        super().__init__(s, textprops=textprops,
-                         multilinebaseline=multilinebaseline)
+    def __init__(self, s, textprops=None, multilinebaseline=False, fixed_width=None):
+        super().__init__(s, textprops=textprops, multilinebaseline=multilinebaseline)
         self._fixed_width = fixed_width
 
     def set_fixed_width(self, width):
@@ -25,7 +22,6 @@ class TextArea(_TextArea):
             w = self._fixed_width
 
         return w, h, xd, yd
-
 
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.
