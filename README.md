@@ -1,6 +1,6 @@
 # mpl_widget_box
 
-<img align="right" src="https://user-images.githubusercontent.com/95962/180644553-9de7a6cf-8ad4-44fc-9aab-60138886ccd8.gif">
+<img align="right" width="220px" src="https://user-images.githubusercontent.com/95962/180644553-9de7a6cf-8ad4-44fc-9aab-60138886ccd8.gif">
 
 A simple gui widgets for matplotlib with a legend-like layout.
 
@@ -21,7 +21,7 @@ legends and annotations.
 
 # A Simple Example
 
-<img align="right" width="250px" src="https://user-images.githubusercontent.com/95962/180644581-73167b90-fda4-412f-a5dc-920d59d18d5d.png">
+<img align="right" width="220px" src="https://user-images.githubusercontent.com/95962/180644581-73167b90-fda4-412f-a5dc-920d59d18d5d.png">
 
 ```python
 import matplotlib.pyplot as plt
