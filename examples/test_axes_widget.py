@@ -6,38 +6,35 @@ from mpl_widget_box import (widgets as W, axes_widget as AW,
                             install_widgets_simple)
 
 
-if True:
+def main():
 
     fig, ax = plt.subplots(num=2, clear=True)
     ax.set_aspect(1.)
     ax.plot([0, 1])
 
-    btn = W.Button("btn1", "Click", centered=True, tooltip="Tooltip")
-    aw1 = AW.TextAreaWidget("input_min", "100", label="MIN",
-                            label_width=35)
+    input1 = AW.TextAreaWidget("input1", "100", label="Value",
+                               label_width=45)
     slider1 = AW.SliderWidget("slider1", 0, 1,
-                              label="Slide", label_width=35)
+                              label="Slide", label_width=45)
+
+    btn = W.Button("btn1", "Click", tooltip="Tooltip", mode="center")
 
     widgets = [
-        W.Title("title0", "My Widgets"),
-        aw1,
+        W.Title("title0", "MPL Widgets"),
+        input1,
         slider1,
         btn,
     ]
 
-    # wbm.add_anchored_widget_box(
-    #     widgets,
-    #     ax,
-    #     loc=2,
-    #     # callback=cb
-    # )
-
     def cb(wb, ev, status):
         if ev.wid == "btn1":
-            print("clicked")
-        print(ev.wid, status)
+            print(status)
 
     install_widgets_simple(ax, widgets, cb=cb)
 
     plt.show()
+
+
+if __name__ == '__main__':
+    main()
 
