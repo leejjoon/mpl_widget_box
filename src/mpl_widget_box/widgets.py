@@ -122,10 +122,33 @@ class VWidgets(PackedWidgetBase, VPacker):
         return self.get_children()
 
 
-class WidgetBoxEvent:
-    def __init__(self, event, wid, auxinfo=None, callback_info=None):
-        self.event = event
+class WidgetBoxEventBase:
+    """
+    wid starts with @ are considered as global event and should not be used.
+    """
+    def __init__(self, wid):
         self.wid = wid
+
+    def __repr__(self):
+        return f"Event: {self.wid}"
+
+class WidgetBoxGlobalEvent:
+    """
+    wid starts with @ are considered as global event and should not be used.
+    """
+    def __init__(self, wid):
+        self.wid = wid
+
+    def __repr__(self):
+        return f"GlobarEvent: {self.wid}"
+
+class WidgetBoxEvent(WidgetBoxEventBase):
+    """
+    wid starts with @ are considered as global event and should not be used.
+    """
+    def __init__(self, event, wid, auxinfo=None, callback_info=None):
+        super().__init__(wid)
+        self.event = event
         self.auxinfo = auxinfo if auxinfo is not None else {}
         self.callback_info = callback_info
 

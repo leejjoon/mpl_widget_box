@@ -18,7 +18,7 @@ from matplotlib.offsetbox import (
 )
 import numpy as np
 
-from .widgets import MouseOverEvent
+from .widgets import MouseOverEvent, WidgetBoxGlobalEvent
 from .widgets import HPacker, VPacker, HWidgets, PackedWidgetBase
 from ._abc import CompositeWidgetBase
 
@@ -206,6 +206,10 @@ class WidgetBoxManager:
         cid = self.fig.canvas.mpl_connect("draw_event", self.save_n_draw)
         self._cid_list["draw_event"] = cid
 
+        # trigger installed event.
+        e = WidgetBoxGlobalEvent("@installed")
+        self._trigger_callback(e)
+
         self.fig.canvas.draw_idle()
 
     def uninstall_all(self):
@@ -312,6 +316,11 @@ class WidgetBoxManager:
         else:
             self.restore_event_lock()
 
+    def _trigger_callback(self, e):
+        if self._callback is not None:
+            status = self.get_named_status()
+            self._callback(self, e, status)
+
     def handle_event_n_draw(self, event):
         event_inside = self.check_event_area(event)
 
@@ -359,9 +368,7 @@ class WidgetBoxManager:
                 self.purge_ephemeral_containers(e)
 
             if e is not None and e.wid is not None:
-                if self._callback is not None:
-                    status = self.get_named_status()
-                    self._callback(self, e, status)
+                self._trigger_callback(e)
 
         # if drawing is needed.
         if event.name in ["button_press_event"] or need_redraw:
