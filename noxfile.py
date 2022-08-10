@@ -1,4 +1,5 @@
 import nox
+from nox_poetry import session
 
 locations = "src", "noxfile.py"
 
@@ -15,3 +16,9 @@ def lint(session):
     args = session.posargs or locations
     session.install("flake8")
     session.run("flake8", *args)
+
+
+@session(python=["3.7", "3.8", "3.9", "3.10"])
+def tests(session):
+    session.install("pytest", ".")
+    session.run("pytest")
