@@ -286,6 +286,13 @@ class Title(Label):
 
 
 class Button(LabelBase):
+    default_contextual_themes = {
+        "disabled": dict(fc="#cccccc", ec="#cccccc"),
+        "disabled-hover": dict(fc="#cccccc", ec="#cccccc"),
+        "default": dict(fc="#6200cc", ec="#6200ee"),
+        "default-hover": dict(fc="#6200ee", ec="#6200ee"),
+    }
+
     def _get_textprops(self):
         return dict(color="w")
 
@@ -310,7 +317,8 @@ class Button(LabelBase):
     ):
 
         self._context = ""
-        self._contextual_themes = {} if contextual_themes is None else contextual_themes
+        themes = {} if contextual_themes is None else contextual_themes
+        self.set_contextual_themes(themes)
 
         box, textbox = _build_box_n_textbox(label, self._get_textprops())
 
@@ -337,10 +345,22 @@ class Button(LabelBase):
             **kwargs,
         )
 
+    def set_contextual_themes(self, themes):
+
+        contextual_themes = self.default_contextual_themes.copy()
+        contextual_themes.update(themes)
+        self._contextual_themes = contextual_themes
+
+
+    def _init_patch_n_context(self, patch):
         patch = self.button_box.patch
-        patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
+
         patch.set_boxstyle("round,pad=0.3")
         patch.set_mutation_scale(8)
+
+
+    def _make_shadow(self, patch):
+        # patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
 
         from matplotlib import patheffects
 
@@ -366,22 +386,46 @@ class Button(LabelBase):
     def _update_patch_with_context(self, renderer):
         patch = self.button_box.patch
 
-        if self._contextual_themes:
-            context = self._context
 
-            if self._mouse_on:
-                context += "-hover"
+        context = self._context if self._context else "default"
 
-            t = self._contextual_themes.get(context, None)
-            if t is None:
-                t = self._contextual_themes["default"]
-            patch.update(t)
+        if self._mouse_on:
+            context += "-hover"
 
+        default_dict = self._contextual_themes["default"]
+        t = self._contextual_themes.get(context, default_dict)
+
+        patch.update(t)
+
+        if not context.startswith("disabled"):
+            self._make_shadow(patch)
         else:
-            if self._mouse_on:
-                patch.update(dict(fc="#6200ee"))
-            else:
-                patch.update(dict(fc="#6200cc"))
+            patch.set_path_effects(None)
+
+
+        # if self._contextual_themes:
+        #     context = self._context
+
+        #     if self._mouse_on:
+        #         context += "-hover"
+
+        #     t = self._contextual_themes.get(context, None)
+        #     if t is None:
+        #         t = self._contextual_themes["default"]
+        #     patch.update(t)
+
+        # else:
+        #     if self._context == "disabled":
+        #         patch.update(dict(fc="#cccccc", ec="#cccccc"))
+        #     else:
+        #         patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
+        #         if self._mouse_on:
+        #             patch.update(dict(fc="#6200ee"))
+        #         else:
+        #             patch.update(dict(fc="#6200cc"))
+
+        # patch = self.button_box.patch
+        # self._make_shadow(patch)
 
     def _update_patch_for_mouse_over(self, renderer):
         patch = self.button_box.patch
