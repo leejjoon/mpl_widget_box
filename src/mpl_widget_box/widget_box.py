@@ -878,3 +878,26 @@ class AnchoredWidgetBox(WidgetBoxBase):
             frameon=frameon,
         )
         return wrapped_box
+
+
+def install_widgets_simple(ax, widgets, cb=None, loc=2, add_to_subfigs=True):
+
+    wbm = WidgetBoxManager(ax.figure)
+
+    wbm.add_anchored_widget_box(
+        widgets,
+        ax,
+        loc=loc,
+    )
+
+    if cb is not None:
+        wbm.set_callback(cb)
+
+    wbm.install_all()
+
+    if add_to_subfigs:
+        wbm.append_to_subfigs(ax.figure)
+
+    wbm.draw_idle()
+
+    return wbm
