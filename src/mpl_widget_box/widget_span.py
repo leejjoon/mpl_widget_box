@@ -6,7 +6,7 @@ from .fa_helper import FontAwesome
 
 fa_icons = FontAwesome.icons
 
-from .widgets import get_icon_fontprop
+get_icon_fontprop = FontAwesome.get_fontprop
 
 from .widgets import Radio, HWidgets, Button, HPacker
 

@@ -19,7 +19,8 @@ from matplotlib.offsetbox import (
 import numpy as np
 
 from .widgets import MouseOverEvent, WidgetBoxGlobalEvent
-from .widgets import HPacker, VPacker, HWidgets, PackedWidgetBase
+from .widgets import HPacker, VPacker
+from .widgets_impl import PackedWidgetBase
 from ._abc import CompositeWidgetBase
 
 from .event_handler import WidgetsEventHandler
