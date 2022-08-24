@@ -200,12 +200,14 @@ class LabelBase(NamedWidget):
         self._update_patch(self.patch)
 
     def get_label(self):
+        """get the label string."""
         if self.textbox is not None:
             return self.textbox.get_text()
         else:
             raise RuntimeError("no textbox is defined")
 
     def set_label(self, l):
+        """set the label string."""
         if self.textbox is not None:
             self.textbox.set_text(l)
         else:
@@ -249,6 +251,25 @@ def _build_box_n_textbox(label, textprops, width=None):
 
 
 class Label(LabelBase):
+    """A widget where you can place text or other box.
+
+    Parameters
+    ----------
+    wid : str
+       The widget ID.
+    label : str or OffsetBox
+       The label string or an instance of OffsetBox to be displayed
+    fixed_width : float
+       the width of the label. When None, the width will be calculated based on the rendered length of the string. Default is None.
+    auxinfo : dict
+       auxilary information to be returned with status
+
+    Examples
+    --------
+
+    >>> w1 = W.Button("btn", "Button")
+    >>> install_widgets_simple(ax, [w1])
+    """
     def __init__(
         self,
         wid,
