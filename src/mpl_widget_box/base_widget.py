@@ -74,7 +74,12 @@ class BaseWidget(PaddedBox):
         else:
             self.update_frame(self.get_window_extent(renderer))
 
-        self.draw_frame(renderer)
+        self.draw_frame_as_is(renderer)
+
+    def draw_frame_as_is(self, renderer):
+        # Note that this is different from self.draw_frame which resets the
+        # bbox of the patch.
+        self.patch.draw(renderer)
 
     def update_child_offsets(self, renderer, outer_bbox):
         w, h, xdescent, ydescent, offsets = self.get_extent_offsets(renderer)
