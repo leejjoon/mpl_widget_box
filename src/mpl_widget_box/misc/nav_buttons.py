@@ -1,7 +1,8 @@
 import numpy as np
 
-import mpl_widget_box.widgets as W
-from mpl_widget_box.composite_widget import CompositeWidgetBase
+from .. import widgets as W
+
+from ..composite_widget import CompositeWidgetBase
 
 
 # class OutOfRangeException(Exception):
@@ -50,15 +51,19 @@ class NavButtons(CompositeWidgetBase):
         self.label_width = label_width
         self.label_format = label_format
 
+        self.btn_prev = W.Button(f"{self.wid}:btn-prev", "Prev")
+        self.btn_next = W.Button(f"{self.wid}:btn-next", "Next")
+        self.lbl = W.Label(f"{self.wid}:lbl", "", fixed_width=self.label_width,
+                           draw_frame=True)
+        # self._lbl.patch.set_edgecolor("0.5")
+
     def build_widgets(self):
-        self._btn_prev = W.Button(f"{self.wid}:btn-prev", "Prev")
-        self._btn_next = W.Button(f"{self.wid}:btn-next", "Next")
-        self._lbl = W.Label(f"{self.wid}:lbl", "", fixed_width=self.label_width)
+
         widgets = [
             W.HWidgets(
-                [self._btn_prev,
-                 self._lbl,
-                 self._btn_next]
+                [self.btn_prev,
+                 self.lbl,
+                 self.btn_next]
             )
         ]
 
@@ -88,11 +93,11 @@ class NavButtons(CompositeWidgetBase):
         if i == i_old:
             return None
 
-        self._lbl.set_label(self.label_format.format(i))
+        self.lbl.set_label(self.label_format.format(i))
 
         bp, bn = boundary_check
-        self._btn_prev.set_context("default" if bp else "disabled")
-        self._btn_next.set_context("default" if bn else "disabled")
+        self.btn_prev.set_context("default" if bp else "disabled")
+        self.btn_next.set_context("default" if bn else "disabled")
 
         return i
 
