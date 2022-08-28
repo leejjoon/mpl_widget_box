@@ -11,7 +11,7 @@ package_data = \
 {'': ['*']}
 
 install_requires = \
-['astropy>=4.0', 'fontawesomefree>=6.1', 'matplotlib>=3,<4']
+['astropy>=4.0', 'fontawesomefree>=6.1', 'matplotlib>=3,<3.6']
 
 setup_kwargs = {
     'name': 'mpl-widget-box',
