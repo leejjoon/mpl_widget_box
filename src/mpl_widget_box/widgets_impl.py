@@ -240,9 +240,9 @@ class LabelBase(NamedWidget):
         self._mouse_on = False
 
 
-def _build_box_n_textbox(label, textprops, width=None):
+def _build_box_n_textbox(label, textprops):
     if isinstance(label, str):
-        box = TextArea(label, textprops=textprops, fixed_width=width)
+        box = TextArea(label, textprops=textprops)
         textbox = box
     elif isinstance(label, OffsetBox):
         box = label
@@ -290,7 +290,7 @@ class Label(LabelBase):
             _props.update(textprops)
 
         box, textbox = _build_box_n_textbox(
-            label, _props, width=fixed_width
+            label, _props,
         )
         LabelBase.__init__(
             self,
@@ -300,6 +300,7 @@ class Label(LabelBase):
             pad=pad,
             draw_frame=draw_frame,
             auxinfo=auxinfo,
+            fixed_width=fixed_width,
             **kwargs,
         )
 

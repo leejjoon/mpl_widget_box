@@ -8,20 +8,8 @@ from matplotlib.offsetbox import (
 
 # TextArea with optional fixed width
 class TextArea(_TextArea):
-    def __init__(self, s, textprops=None, multilinebaseline=False, fixed_width=None):
+    def __init__(self, s, textprops=None, multilinebaseline=False):
         super().__init__(s, textprops=textprops, multilinebaseline=multilinebaseline)
-        self._fixed_width = fixed_width
-
-    def set_fixed_width(self, width):
-        # FIXME: we may workaround the dpi dependency.
-        self._fixed_width = width
-
-    def get_extent(self, renderer):
-        w, h, xd, yd = super().get_extent(renderer)
-        if self._fixed_width is not None:
-            w = renderer.points_to_pixels(self._fixed_width)
-
-        return w, h, xd, yd
 
     def set_textprops(self, **textprops):
         t = self._text
@@ -48,6 +36,8 @@ class BaseWidget(PaddedBox):
         patch_attrs=None,
         tooltip=None,
         expand=True,
+        fixed_width=None,
+        align="",
     ):
         super().__init__(child, pad=pad, draw_frame=draw_frame, patch_attrs=patch_attrs)
 
@@ -55,6 +45,18 @@ class BaseWidget(PaddedBox):
 
         self._mouse_on = False
         self._expand = expand
+        self._align = align
+        self._fixed_width = fixed_width
+
+    def set_fixed_width(self, width):
+        self._fixed_width = width
+
+    def get_extent(self, renderer):
+        w, h, xd, yd = super().get_extent(renderer)
+        if self._fixed_width is not None:
+            w = renderer.points_to_pixels(self._fixed_width + 2 * self.pad)
+
+        return w, h, xd, yd
 
     def set_tooltip(self, tooltip):
         if tooltip is not None:
@@ -80,7 +82,17 @@ class BaseWidget(PaddedBox):
 
             self.update_frame(frame_bbox)
         else:
-            self.update_frame(self.get_window_extent(renderer))
+
+            frame_bbox = self.get_window_extent(renderer)
+            if self._align == "right":
+                # make offset for right align
+                oa = outer_bbox.width - frame_bbox.width if self._align == "right" else 0
+
+                frame_bbox = mtransforms.Bbox.from_bounds(
+                    frame_bbox.xmin + oa, frame_bbox.ymin, frame_bbox.width, frame_bbox.height
+                )
+
+            self.update_frame(frame_bbox)
 
         self.draw_frame_as_is(renderer)
 
@@ -92,8 +104,12 @@ class BaseWidget(PaddedBox):
     def update_child_offsets(self, renderer, outer_bbox):
         w, h, xdescent, ydescent, offsets = self.get_extent_offsets(renderer)
         px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
+
+        # make offset for right align
+        oa = outer_bbox.width - w if self._align == "right" else 0
+
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
-            c.set_offset((px + ox, py + oy))
+            c.set_offset((oa + px + ox, py + oy))
 
     def draw(self, renderer):
         # FIXME: I don't think this method is called by others.
