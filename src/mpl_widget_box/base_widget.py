@@ -51,6 +51,16 @@ class BaseWidget(PaddedBox):
     def set_fixed_width(self, width):
         self._fixed_width = width
 
+    # we override get_window_extent and get_extent to support fixed width
+    def get_window_extent(self, renderer):
+        _ = super().get_window_extent(renderer)
+
+        w = _.width
+        if self._fixed_width is not None:
+            w = renderer.points_to_pixels(self._fixed_width + 2 * self.pad)
+            _ = _.from_bounds(_.x0, _.y0, w, _.height)
+        return _
+
     def get_extent(self, renderer):
         w, h, xd, yd = super().get_extent(renderer)
         if self._fixed_width is not None:
@@ -73,7 +83,6 @@ class BaseWidget(PaddedBox):
         return bb
 
     def draw_frame_with_outer_bbox(self, renderer, outer_bbox):
-
         if self._expand:
 
             frame_bbox = mtransforms.Bbox.from_bounds(

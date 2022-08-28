@@ -48,7 +48,7 @@ class DrawWithDelayed:
         Update the location of children if necessary and draw them
         to the given *renderer*.
         """
-        # Modifie from OffsetBox.draw.
+        # Modified from OffsetBox.draw.
         my_bbox = self.get_extent_offsets(renderer)
         w, h, xdescent, ydescent, offsets = my_bbox
         px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
