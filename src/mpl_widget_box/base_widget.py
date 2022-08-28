@@ -19,9 +19,17 @@ class TextArea(_TextArea):
     def get_extent(self, renderer):
         w, h, xd, yd = super().get_extent(renderer)
         if self._fixed_width is not None:
-            w = self._fixed_width
+            w = renderer.points_to_pixels(self._fixed_width)
 
         return w, h, xd, yd
+
+    def set_textprops(self, **textprops):
+        t = self._text
+        for k, v in textprops.items():
+            if hasattr(t, f"set_{k}"):
+                getattr(t, f"set_{k}")(v)
+            else:
+                raise KeyError(f"no set_f{k} method in {t}")
 
 
 # Widgets are derived from PaddedBox, which is basically an offsetbox.

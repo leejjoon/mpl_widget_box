@@ -213,8 +213,11 @@ class LabelBase(NamedWidget):
         else:
             raise RuntimeError("no textbox is defined")
 
-    def _get_textprops(self):
+    def _get_default_textprops(self):
         return {}
+
+    def set_textprops(self, **textprops):
+        self.textbox.set_textprops(**textprops)
 
     def _update_patch(self, patch):
         patch.update(dict(ec="none"))
@@ -262,7 +265,7 @@ class Label(LabelBase):
     fixed_width : float
        the width of the label. When None, the width will be calculated based on the rendered length of the string. Default is None.
     auxinfo : dict
-       auxilary information to be returned with status
+       auxilary information to be returned with status. Default is empty dict.
 
     Examples
     --------
@@ -278,11 +281,16 @@ class Label(LabelBase):
         draw_frame=True,
         auxinfo=None,
         fixed_width=None,
+        textprops=None,
         **kwargs,
     ):
 
+        _props = self._get_default_textprops()
+        if textprops is not None:
+            _props.update(textprops)
+
         box, textbox = _build_box_n_textbox(
-            label, self._get_textprops(), width=fixed_width
+            label, _props, width=fixed_width
         )
         LabelBase.__init__(
             self,
@@ -302,12 +310,8 @@ class Label(LabelBase):
         return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
 
 
-class ToggleButton(Label):
-    pass
-
-
 class Title(Label):
-    def _get_textprops(self):
+    def _get_default_textprops(self):
         return dict(weight="bold")
 
     # def _update_patch(self, patch):
@@ -496,7 +500,7 @@ class Sub(LabelBase):
         self, wid, label, widgets, pad=None, draw_frame=True, where="selected", **kwargs
     ):
 
-        box, textbox = _build_box_n_textbox(label, self._get_textprops())
+        box, textbox = _build_box_n_textbox(label, self._get_default_textprops())
         self._button_label = box
         label_box = self.build_label(self._button_label)
 
