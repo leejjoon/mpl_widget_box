@@ -1,0 +1,5 @@
+python = ">=3.7"
+matplotlib = "^3"
+astropy = ">=4.0"
+fontawesomefree = ">=6.1"
+Sphinx = "^5.1.1"

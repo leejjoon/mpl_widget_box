@@ -8,4 +8,8 @@ mpl_widget_box
 References
 ==========
 
-- :doc:`widgets`
+.. toctree::
+   :maxdepth: 2
+
+   widgets
+
