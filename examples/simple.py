@@ -19,7 +19,7 @@ def main():
 
     widgets = [
         TitleCollapsable("title-collapse", "My Widget"),
-        W.Button("btn1", "Click", mode="center", tooltip="Tooltip"),
+        W.Button("btn1", "Click", align="center", expand=True, tooltip="Tooltip"),
         W.HWidgets([W.Button("btn2", "A"), W.Button("btn3", "B")]),
         W.CheckBox("check", ["1", "2", "3"], direction="h"),
         W.Radio("radio", ["Selection 1", "Selection 2"], title="Radio"),

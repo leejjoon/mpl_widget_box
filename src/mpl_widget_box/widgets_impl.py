@@ -10,13 +10,16 @@ __all__ = ["VPacker", "HPacker", "HWidgets", "VWidgets",
 from itertools import zip_longest
 
 import matplotlib.transforms as mtransforms
-from matplotlib.offsetbox import bbox_artist
+# from matplotlib.offsetbox import bbox_artist
 
 from matplotlib.offsetbox import (
+    bbox_artist,
     OffsetBox,
 )
 
 from matplotlib.offsetbox import VPacker as _VPacker, HPacker as _HPacker
+from matplotlib import patheffects
+
 
 # from pathlib import Path
 # from matplotlib.font_manager import FontProperties
@@ -67,7 +70,7 @@ class DrawWithDelayed:
 
             delayed_draws.extend(dd or [])
 
-        # not sure the role of this
+        # FIXME: not sure the role of this. Removing it shows no harm.
         bbox_artist(self, renderer, fill=False, props=dict(pad=0.0))
 
         self.stale = False
@@ -264,14 +267,18 @@ class Label(LabelBase):
        The label string or an instance of OffsetBox to be displayed
     fixed_width : float
        the width of the label. When None, the width will be calculated based on the rendered length of the string. Default is None.
+    textprops : dict
+       text properties to be set. Default is None.
+    align : str
+       dicrection to align the text. 'left', 'center' or 'right'. Default is 'left'.
     auxinfo : dict
        auxilary information to be returned with status. Default is empty dict.
 
     Examples
     --------
 
-    >>> w1 = W.Button("btn", "Button")
-    >>> install_widgets_simple(ax, [w1])
+    >>> l1 = W.Label("lbl", "Label")
+    >>> install_widgets_simple(ax, [l1])
     """
     def __init__(
         self,
@@ -282,6 +289,7 @@ class Label(LabelBase):
         auxinfo=None,
         fixed_width=None,
         textprops=None,
+        align="left",
         **kwargs,
     ):
 
@@ -301,6 +309,7 @@ class Label(LabelBase):
             draw_frame=draw_frame,
             auxinfo=auxinfo,
             fixed_width=fixed_width,
+            align=align,
             **kwargs,
         )
 
@@ -321,14 +330,37 @@ class Title(Label):
 
 
 class Button(LabelBase):
-    default_contextual_themes = {
-        "disabled": dict(fc="#cccccc", ec="#cccccc"),
-        "disabled-hover": dict(fc="#cccccc", ec="#cccccc"),
+    """A widget you can click.
+
+    Parameters
+    ----------
+    wid : str
+       The widget ID.
+    label : str or OffsetBox
+       The label string or an instance of OffsetBox to be displayed
+    textprops : dict
+       text properties to be set. Default is None.
+    contextual_theme : dict
+    expand : bool
+       expand the button frame if True. Default if False.
+    align : str
+       dicrection to align the text. 'left', 'center' or 'right'. Default is 'left'.
+    tooltip: str
+
+    Examples
+    --------
+
+    >>> b1 = W.Button("btn", "Button")
+    >>> install_widgets_simple(ax, [b1])
+    """
+    default_contextual_theme = {
         "default": dict(fc="#6200cc", ec="#6200ee"),
         "default-hover": dict(fc="#6200ee", ec="#6200ee"),
+        "disabled": dict(fc="#cccccc", ec="#cccccc"),
+        "disabled-hover": dict(fc="#cccccc", ec="#cccccc"),
     }
 
-    def _get_textprops(self):
+    def _get_default_textprops(self):
         return dict(color="w")
 
     def set_context(self, c):
@@ -344,31 +376,29 @@ class Button(LabelBase):
         self,
         wid,
         label,
+        textprops=None,
+        contextual_theme=None,
+        expand=False,
+        align="",
         pad=3.0,
-        mode=None,
-        draw_frame=True,
-        contextual_themes=None,
+        tooltip="",
         **kwargs,
     ):
 
         self._context = ""
-        themes = {} if contextual_themes is None else contextual_themes
-        self.set_contextual_themes(themes)
+        themes = {} if contextual_theme is None else contextual_theme
+        self.set_contextual_theme(themes)
 
-        box, textbox = _build_box_n_textbox(label, self._get_textprops())
+        _props = self._get_default_textprops()
+        if textprops is not None:
+            _props.update(textprops)
 
-        if mode not in ["expand", "center", None]:
-            raise ValueError(f"Unknown value of mode '{mode}'")
+        box, textbox = _build_box_n_textbox(label, _props)
 
-        expand = True if mode == "expand" else False
-        centered = True if mode == "center" else False
-
-        if centered:
-            self.button_box = Centered(box, pad=pad, draw_frame=draw_frame)
-        else:
-            self.button_box = BaseWidget(
-                box, pad=pad, draw_frame=draw_frame, expand=expand
-            )
+        self.button_box = BaseWidget(
+            box, pad=pad, draw_frame=True, expand=expand,
+            align=align
+        )
 
         super().__init__(
             wid,
@@ -376,16 +406,29 @@ class Button(LabelBase):
             textbox=textbox,
             pad=3,
             draw_frame=False,
-            # expand=expand,
+            tooltip=tooltip,
             **kwargs,
         )
 
-    def set_contextual_themes(self, themes):
+    def set_contextual_theme(self, themes):
+        """ set contextual theme for the button.
 
-        contextual_themes = self.default_contextual_themes.copy()
+        Examples
+        --------
+
+        >>> b1 = W.Button("btn", "Button")
+        >>> theme = {
+            "default": dict(fc="#6200cc", ec="#6200ee"),
+            "default-hover": dict(fc="#6200ee", ec="#6200ee"),
+            "disabled": dict(fc="#cccccc", ec="#cccccc"),
+            "disabled-hover": dict(fc="#cccccc", ec="#cccccc")}
+        >>> b1.set_contextual_theme(theme)
+
+        """
+
+        contextual_themes = self.default_contextual_theme.copy()
         contextual_themes.update(themes)
-        self._contextual_themes = contextual_themes
-
+        self._contextual_theme = contextual_themes
 
     def _init_patch_n_context(self, patch):
         patch = self.button_box.patch
@@ -393,11 +436,7 @@ class Button(LabelBase):
         patch.set_boxstyle("round,pad=0.3")
         patch.set_mutation_scale(8)
 
-
     def _make_shadow(self, patch):
-        # patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
-
-        from matplotlib import patheffects
 
         offset = (2, -2)
         patch.set_path_effects(
@@ -418,7 +457,7 @@ class Button(LabelBase):
     def handle_button_press(self, event, parent=None):
         return WidgetBoxEvent(event, self.wid, auxinfo=self.auxinfo)
 
-    def _update_patch_with_context(self, renderer):
+    def _update_widget_with_context(self, renderer):
         patch = self.button_box.patch
 
 
@@ -427,8 +466,8 @@ class Button(LabelBase):
         if self._mouse_on:
             context += "-hover"
 
-        default_dict = self._contextual_themes["default"]
-        t = self._contextual_themes.get(context, default_dict)
+        default_dict = self._contextual_theme["default"]
+        t = self._contextual_theme.get(context, default_dict)
 
         patch.update(t)
 
@@ -437,48 +476,15 @@ class Button(LabelBase):
         else:
             patch.set_path_effects(None)
 
-
-        # if self._contextual_themes:
-        #     context = self._context
-
-        #     if self._mouse_on:
-        #         context += "-hover"
-
-        #     t = self._contextual_themes.get(context, None)
-        #     if t is None:
-        #         t = self._contextual_themes["default"]
-        #     patch.update(t)
-
-        # else:
-        #     if self._context == "disabled":
-        #         patch.update(dict(fc="#cccccc", ec="#cccccc"))
-        #     else:
-        #         patch.update(dict(fc="#6200ee", ec="#6200ee"))  # patch_attrs
-        #         if self._mouse_on:
-        #             patch.update(dict(fc="#6200ee"))
-        #         else:
-        #             patch.update(dict(fc="#6200cc"))
-
-        # patch = self.button_box.patch
-        # self._make_shadow(patch)
-
-    def _update_patch_for_mouse_over(self, renderer):
-        patch = self.button_box.patch
-
-        if self._mouse_on:
-            patch.update(dict(fc="#6200ee"))
-        else:
-            patch.update(dict(fc="#6200cc"))
-
     def draw(self, renderer):
 
-        self._update_patch_with_context(renderer)
+        self._update_widget_with_context(renderer)
 
         return super().draw(renderer)
 
     def draw_with_outer_bbox(self, renderer, outer_bbox):
 
-        self._update_patch_with_context(renderer)
+        self._update_widget_with_context(renderer)
 
         return super().draw_with_outer_bbox(renderer, outer_bbox)
 
@@ -620,6 +626,29 @@ class Dropdown(Sub, SelectableBase):
 
 
 class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
+    """Radio buttons.
+
+    Parameters
+    ----------
+    wid : str
+       The widget ID.
+    labels : list of str
+       The label strings
+    selected : int
+    values : list
+       list of values associated with the labels. The staus will include the value of currently selected item.
+    title: str
+    tooltips: str
+    direction: str
+        The direction of radio items will be packed. 'v' or 'h'. Default is 'v'.
+
+    Examples
+    --------
+
+    >>> r1 = W.Radio("radio", ["Sel 1", "Sel2", "Sel 3"])
+    >>> install_widgets_simple(ax, [r1])
+    """
+
     def _populate_buttons(self):
         SELECTED_ON = fa_icons["circle-dot"]
         SELECTED_OFF = fa_icons["circle"]
@@ -728,9 +757,12 @@ class Radio(BaseWidget, WidgetBoxEventHandlerBase, SelectableBase):
         self.patch.update(dict(ec="#AAEEEE", fc="#EEFFFF"))
 
     def select(self, i):
-        """
-        if i is larger than len(values) or smaller than 0, it will
-        automatically wrapped around.
+        """Select the item
+
+        Parameters
+        ----------
+        i : int
+            select the i-th item. If i is larger than len(values) or smaller than 0, it will automatically wrapped around.
         """
         if i is None:
             i = 0
@@ -831,6 +863,28 @@ class DropdownMenu(Radio):
 
 
 class CheckBox(Radio):
+    """Checkbox.
+
+    Parameters
+    ----------
+    wid : str
+       The widget ID.
+    labels : list of str
+       The label strings
+    selected : int
+    values : list
+       list of values associated with the labels. The staus will include the value of currently selected item.
+    title: str
+    tooltips: str
+    direction: str
+        The direction of radio items will be packed. 'v' or 'h'. Default is 'v'.
+
+    Examples
+    --------
+
+    >>> cb1 = W.CheckBox("cb", ["Sel 1", "Sel2", "Sel 3"])
+    >>> install_widgets_simple(ax, [cb1])
+    """
     # button_on = TextArea(SELECTED_ON)
     # button_off = TextArea(SELECTED_OFF)
     # button_on = OffsetImage(ff[8]["check_button_on"])
@@ -859,6 +913,8 @@ class CheckBox(Radio):
             self.select(i)
 
     def select(self, i):
+        """select (or deselect) the i-th item.
+        """
         if i is None:
             return
 
@@ -891,14 +947,14 @@ class RadioButton(Radio):
             box = Button(
                 self.wid + ":" + l,
                 TextArea(l),
-                contextual_themes=contextual_themes,
+                contextual_theme=contextual_themes,
                 tooltip=tooltip,
             )
         else:
             box = Button(
                 self.wid + ":" + str(l),
                 l,
-                contextual_themes=contextual_themes,
+                contextual_theme=contextual_themes,
                 tooltip=tooltip,
             )
 

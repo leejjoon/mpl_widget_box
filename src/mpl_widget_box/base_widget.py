@@ -95,8 +95,14 @@ class BaseWidget(PaddedBox):
             frame_bbox = self.get_window_extent(renderer)
             if self._align == "right":
                 # make offset for right align
-                oa = outer_bbox.width - frame_bbox.width if self._align == "right" else 0
+                oa = outer_bbox.width - frame_bbox.width
+            elif self._align == "center":
+                # make offset for right align
+                oa = .5 * (outer_bbox.width - frame_bbox.width)
+            else:
+                oa = 0
 
+            if oa != 0:
                 frame_bbox = mtransforms.Bbox.from_bounds(
                     frame_bbox.xmin + oa, frame_bbox.ymin, frame_bbox.width, frame_bbox.height
                 )
@@ -115,7 +121,12 @@ class BaseWidget(PaddedBox):
         px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
 
         # make offset for right align
-        oa = outer_bbox.width - w if self._align == "right" else 0
+        if self._align == "right":
+            oa = outer_bbox.width - w
+        elif self._align == "center":
+            oa = .5 * (outer_bbox.width - w)
+        else:
+            oa = 0.
 
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
             c.set_offset((oa + px + ox, py + oy))

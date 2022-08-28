@@ -20,7 +20,7 @@ except ImportError:
 if ryml:
     icons = FontAwesome.load_icons_ryml()
 else:
-    icons = FontAwesome.load_icons_ryml()
+    icons = FontAwesome.load_icons_yaml()
 
 
 freqs = np.arange(2, 20, 3)

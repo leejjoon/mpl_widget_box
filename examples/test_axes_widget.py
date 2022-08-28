@@ -17,7 +17,8 @@ def main():
     slider1 = AW.SliderWidget("slider1", 0, 1,
                               label="Slide", label_width=45)
 
-    btn = W.Button("btn1", "Click", tooltip="Tooltip", mode="center")
+    btn = W.Button("btn1", "Click", tooltip="Tooltip",
+                   expand=True, align="center")
 
     widgets = [
         W.Title("title0", "MPL Widgets"),

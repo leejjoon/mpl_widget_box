@@ -9,7 +9,8 @@ from matplotlib.transforms import Bbox, TransformedBbox
 
 from matplotlib.widgets import TextBox, Slider, RangeSlider
 
-from .widgets import BaseWidget, Label, HWidgets, MouseOverEvent, WidgetBoxEvent
+from .base_widget import BaseWidget
+from .widgets import Label, HWidgets, MouseOverEvent, WidgetBoxEvent
 
 from ._abc import CompositeWidgetBase
 

@@ -40,5 +40,5 @@ def tests(session):
 @nox.session(python="3.9")
 def docs(session) -> None:
     """Build the documentation."""
-    install_with_constraints(session, "sphinx", "numpydoc", ".")
-    session.run("sphinx-build", "docs", "docs/_build")
+    install_with_constraints(session, "sphinx", "sphinx-rtd-theme", ".")
+    session.run("sphinx-build", "docs", "docs/build")
