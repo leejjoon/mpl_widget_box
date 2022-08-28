@@ -54,8 +54,8 @@ class NavButtons(CompositeWidgetBase):
         self.btn_prev = W.Button(f"{self.wid}:btn-prev", "Prev")
         self.btn_next = W.Button(f"{self.wid}:btn-next", "Next")
         self.lbl = W.Label(f"{self.wid}:lbl", "", fixed_width=self.label_width,
-                           draw_frame=True)
-        # self._lbl.patch.set_edgecolor("0.5")
+                           align="right")
+        self.lbl.patch.set_edgecolor("0.8")
 
     def build_widgets(self):
 
