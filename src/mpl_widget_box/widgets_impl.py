@@ -381,7 +381,7 @@ class Button(LabelBase):
         expand=False,
         align="",
         pad=3.0,
-        tooltip="",
+        tooltip=None,
         **kwargs,
     ):
 
