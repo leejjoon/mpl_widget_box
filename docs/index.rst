@@ -12,4 +12,5 @@ References
    :maxdepth: 2
 
    widgets
-
+   Tutorial.ipynb
+   Tutorial01.ipynb
