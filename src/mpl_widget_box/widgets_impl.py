@@ -5,7 +5,8 @@
 __all__ = ["VPacker", "HPacker", "HWidgets", "VWidgets",
            "WidgetBoxEvent", "WidgetBoxGlobalEvent", "MouseOverEvent",
            "Label", "Title", "Button",
-           "Radio", "CheckBox", "Sub", "Dropdown", "RadioButton"]
+           "Radio", "CheckBox", "Sub", "Dropdown", "RadioButton",
+           "Dropdown", "DropdownMenu"]
 
 from itertools import zip_longest
 
