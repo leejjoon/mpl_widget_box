@@ -44,18 +44,22 @@ class Index:
 
 class NavButtons(CompositeWidgetBase):
     def __init__(self, wid, target_list, label_width=20,
-                 label_format="{:d}"):
+                 label_format="{}"):
         self.wid = wid
         self.target_list = target_list
         self.ind = Index(max=len(target_list) - 1)
         self.label_width = label_width
         self.label_format = label_format
 
-        self.btn_prev = W.Button(f"{self.wid}:btn-prev", "Prev")
-        self.btn_next = W.Button(f"{self.wid}:btn-next", "Next")
-        self.lbl = W.Label(f"{self.wid}:lbl", "", fixed_width=self.label_width,
+        self.btn_prev = W.Button(self._cwid("btn-prev"), "Prev")
+        self.btn_next = W.Button(self._cwid("btn-next"), "Next")
+        self.lbl = W.Label(self._cwid("lbl"), "", fixed_width=self.label_width,
                            align="right")
         self.lbl.patch.set_edgecolor("0.8")
+
+    def _cwid(self, n):
+        "get wid of the child widget"
+        return f"{self.wid}:{n}"
 
     def build_widgets(self):
 
@@ -93,11 +97,16 @@ class NavButtons(CompositeWidgetBase):
         if i == i_old:
             return None
 
-        self.lbl.set_label(self.label_format.format(i))
+        v = self.target_list[i]
+        self.lbl.set_label(self.label_format.format(v))
+
+        # we update status to reflect the change.
+        status.update({self.lbl.wid: self.lbl.get_status(),
+                       self._cwid("ind"): {"index": i, "value": v}})
 
         bp, bn = boundary_check
         self.btn_prev.set_context("default" if bp else "disabled")
         self.btn_next.set_context("default" if bn else "disabled")
 
-        return i
+        return v
 

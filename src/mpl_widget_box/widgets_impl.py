@@ -227,7 +227,12 @@ class LabelBase(NamedWidget):
         patch.update(dict(ec="none"))
 
     def get_status(self):
-        return {}
+        try:
+            lbl = self.get_label()
+        except RuntimeError:
+            lbl = None
+
+        return {"label": lbl}
 
     def handle_button_press(self, event, parent=None):
         return WidgetBoxEvent(event, None, auxinfo=self.auxinfo)
