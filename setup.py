@@ -23,6 +23,7 @@ setup_kwargs = {
     'maintainer': None,
     'maintainer_email': None,
     'url': None,
+    'classifiers': ['Framework :: Matplotlib'],
     'package_dir': package_dir,
     'packages': packages,
     'package_data': package_data,
