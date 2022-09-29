@@ -12,6 +12,9 @@ class EventHandlerBase:
         renderer = mpl_event.canvas.get_renderer()
 
         for i, b in enumerate(self.get_child_widgets()):
+            if not b.get_visible():
+                # we skip invisible widgets
+                continue
             if hasattr(b, "get_event_area"):
                 w = b.get_event_area(renderer)
             else:
