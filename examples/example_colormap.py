@@ -20,8 +20,7 @@ cbar_selector1 = CbarSelectorWidget("csw1")  # cbar selector ax1
 cbar_selector2 = CbarSelectorWidget("csw2", dir="h")  # for ax2
 
 # for ax1
-widgets1 = [cbar_selector1,
-            W.Button("btn1", "Click", tooltip="do nothing")]
+widgets1 = [cbar_selector1]
 
 # for ax2
 widgets2 = [cbar_selector2]

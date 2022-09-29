@@ -9,15 +9,15 @@ import mpl_widget_box.widgets as w
 from mpl_widget_box.widget_span import Span, SpanSelectors
 # from mpl_widget_span import Span
 
-fig, ax = plt.subplots(1, 1, num=1, clear=True)
+fig, (ax1, ax2) = plt.subplots(1, 2, num=1, clear=True)
 x = np.linspace(1., 2.5, 100)
 y = np.zeros_like(x)
 y[len(y)//2] = 1
 
-ax.plot(x, y)
+ax1.plot(x, y)
 
 
-span = SpanSelectors(ax, "line",
+span = SpanSelectors(ax1, "line",
                      labels=["line 1", "cont 1", "cont 2"])
 
 subwidgets1 = [
@@ -48,7 +48,7 @@ wbm = WidgetBoxManager(fig)
 
 wc = wbm.add_anchored_widget_box(
     widgets,
-    ax,
+    ax1,
     loc=2,
     # callback=cb
 )
@@ -59,7 +59,6 @@ def cb(wb, ev, status):
     print(ev)
 
     if ev.wid == "zoom":
-        # fig.canvas.toolbar.push_current()
 
         toolbar = fig.canvas.toolbar
         # we need this in case the zoom button is pressed before the home is
@@ -69,7 +68,7 @@ def cb(wb, ev, status):
 
         x1, x2 = span.get_current_extents()
         dx = x2 - x1
-        ax.set_xlim(x1 - dx, x2 + dx)
+        ax1.set_xlim(x1 - dx, x2 + dx)
 
         fig.canvas.draw_idle()
         # FIXME : If the button is prssed while in the pan mode, the current
@@ -77,6 +76,10 @@ def cb(wb, ev, status):
         # axes. We need better solution
         if toolbar.mode._navigate_mode != "PAN":
             toolbar.push_current()
+
+    elif ev.wid == "plot":
+
+        pass
 
     elif ev.wid == "menu-kind:select":
         wb = wc.get_widget_box()
@@ -92,8 +95,6 @@ def cb(wb, ev, status):
             *subwidgets
         ]
         wc.reinit_widget_box(wbm, widgets)
-
-    # print(ev, status)
 
 wbm.set_callback(cb)
 

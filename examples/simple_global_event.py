@@ -13,10 +13,9 @@ widgets = [
 
 # A callback function which will be bound to any button-press event.
 def cb(wbm, ev, status):
-    lbl = wbm.get_widget_by_id("lbl")
-    lbl.set_label("Installed")
-    # if ev.wid == "btn":
-    #     print("Button is pressed.")
+    if ev.wid == "@installed":
+        lbl = wbm.get_widget_by_id("lbl")
+        lbl.set_label("Installed")
 
 wbm = install_widgets_simple(ax, widgets, cb)
 
