@@ -463,6 +463,14 @@ class WidgetBoxManager:
 
     # containers can have multiple widget_boxes.
 
+    def wait_for_button(self):
+        from matplotlib.pyplot import fignum_exists
+        if fignum_exists(self.fig.number):
+            self.fig.waitforbuttonpress()
+            return self.get_last_callback_return_value()
+        else:
+            # return True if fig does not exists anymore.
+            return True
 
 class WidgetBoxContainerBase:
     def __init__(self):
