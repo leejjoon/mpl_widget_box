@@ -458,7 +458,9 @@ class WidgetBoxManager:
     def clear(self, keep_observers=None):
         self.uninstall_all()
 
-    def append_to_subfigs(self, fig):
+    def _append_to_subfigs(self, fig):
+        # This is a hack to add wbm as an artist of the fig so that it can be
+        # unmounted when the figure got cleared.
         fig.subfigs.append(self)
 
     # containers can have multiple widget_boxes.
@@ -909,7 +911,7 @@ def install_widgets_simple(ax, widgets, cb=None, loc=2, add_to_subfigs=True):
     wbm.install_all()
 
     if add_to_subfigs:
-        wbm.append_to_subfigs(ax.figure)
+        wbm._append_to_subfigs(ax.figure)
 
     wbm.draw_idle()
 
