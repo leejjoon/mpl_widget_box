@@ -64,6 +64,11 @@ class WidgetBoxManager:
 
         self._stealed_lock = None
 
+        self._last_callback_return_value = None
+
+    def get_last_callback_return_value(self):
+        return self._last_callback_return_value 
+
     def add_foreign_widget(self, w: ForeignWidgetProtocol):
         self._foreign_widgets.append(w)
 
@@ -320,7 +325,7 @@ class WidgetBoxManager:
     def _trigger_callback(self, e):
         if self._callback is not None:
             status = self.get_named_status()
-            self._callback(self, e, status)
+            return self._callback(self, e, status)
 
     def handle_event_n_draw(self, event):
         event_inside = self.check_event_area(event)
@@ -369,7 +374,7 @@ class WidgetBoxManager:
                 self.purge_ephemeral_containers(e)
 
             if e is not None and e.wid is not None:
-                self._trigger_callback(e)
+                self._last_callback_return_value = self._trigger_callback(e)
 
         # if drawing is needed.
         if event.name in ["button_press_event"] or need_redraw:
