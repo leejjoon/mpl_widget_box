@@ -75,7 +75,7 @@ class Span:
 
 
 class SpanSelectors(Span, CompositeWidgetBase):
-    def __init__(self, ax, rootname, labels=[], values=None):
+    def __init__(self, rootname, ax, labels=[], values=None):
         Span.__init__(self, ax)
         self.rootname = rootname
         self.labels = labels
@@ -180,10 +180,13 @@ class SpanSelectors(Span, CompositeWidgetBase):
             self.set_current_extents((0, 0))
 
             sel = self._prefixed_name("sel")
-            i = status[sel]["selected"][0]
+            i = status[sel]["selected"]
             self._update_selector_label(i, None, None)
 
             self.extents_dict[status[sel]["value"]] = (0, 0)
+
+        status.update({self._prefixed_name("extents_dict"): self.extents_dict})
+
 
     def _update_selector_label(self, i, x1, x2):
         if (x1, x2) == (None, None):
