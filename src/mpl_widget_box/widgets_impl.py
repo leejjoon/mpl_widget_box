@@ -141,16 +141,15 @@ class WidgetBoxEventBase:
     """
     def __init__(self, wid):
         self.wid = wid
+        self.auxinfo = None
 
     def __repr__(self):
         return f"Event: {self.wid}"
 
-class WidgetBoxGlobalEvent:
+class WidgetBoxGlobalEvent(WidgetBoxEventBase):
     """
     wid starts with @ are considered as global event and should not be used.
     """
-    def __init__(self, wid):
-        self.wid = wid
 
     def __repr__(self):
         return f"GlobarEvent: {self.wid}"
