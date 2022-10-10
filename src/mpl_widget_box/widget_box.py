@@ -339,6 +339,9 @@ class WidgetBoxManager:
 
             return
 
+        # we iter through containers to find out any of the widget in the
+        # container can catch the event and convert it to WidgetBox' own event
+        # instance.
         for zorder, c in reversed(
             sorted(self._container_list, key=operator.itemgetter(0))
         ):
@@ -440,6 +443,22 @@ class WidgetBoxManager:
             if w is not None:
                 return w
 
+    def get_parents_of_wid(self, wid):
+        for zorder, c in self._container_list:
+            wb = c.get_widgetbox_of_wid(wid)
+            if wb is not None:
+                return c, wb
+        return None, None
+
+    def wait_for_button(self):
+        from matplotlib.pyplot import fignum_exists
+        if fignum_exists(self.fig.number):
+            self.fig.waitforbuttonpress()
+            return self.get_last_callback_return_value()
+        else:
+            # return True if fig does not exists anymore.
+            return True
+
     # This is a hack for the widgets to get removed when the figure is cleared
     # (clf), We will add the manager as a subfigure of the figure. When the
     # figure is cleared, the clear method of the subfigures are also called. On
@@ -465,14 +484,6 @@ class WidgetBoxManager:
 
     # containers can have multiple widget_boxes.
 
-    def wait_for_button(self):
-        from matplotlib.pyplot import fignum_exists
-        if fignum_exists(self.fig.number):
-            self.fig.waitforbuttonpress()
-            return self.get_last_callback_return_value()
-        else:
-            # return True if fig does not exists anymore.
-            return True
 
 class WidgetBoxContainerBase:
     def __init__(self):
@@ -502,6 +513,12 @@ class WidgetBoxContainerBase:
             w = wb.get_widget_by_id(wid)
             if w is not None:
                 return w
+
+    def get_widgetbox_of_wid(self, wid):
+        for zorder, wb in self.iter_wb_list():
+            w = wb.get_widget_by_id(wid)
+            if w is not None:
+                return wb
 
     def check_event_area(self, event):
         for zorder, wb in self.iter_wb_list():
