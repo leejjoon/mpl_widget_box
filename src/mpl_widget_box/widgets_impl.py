@@ -5,7 +5,8 @@
 __all__ = ["VPacker", "HPacker", "HWidgets", "VWidgets",
            "WidgetBoxEvent", "WidgetBoxGlobalEvent", "MouseOverEvent",
            "Label", "Title", "Button",
-           "Radio", "CheckBox", "Sub", "Dropdown", "RadioButton",
+           "Radio", "CheckBox", "Sub", "Dropdown",
+           "RadioButton", "RadioButtonV",
            "Dropdown", "DropdownMenu"]
 
 from itertools import zip_longest
@@ -1025,3 +1026,31 @@ class RadioButton(Radio):
 
         if b is not None:
             return b.handle_motion_notify(event, parent)
+
+
+class RadioButtonV(RadioButton):
+
+    def __init__(
+        self, wid, labels, selected=None, values=None, tooltips=None, title=None, pad=3
+    ):
+        # self.selected = self.get_initial_selected(selected)
+
+        self.wid = wid
+
+        self.boxes = []
+        self._title_offset = 0
+
+        self.values = values if values is not None else labels
+
+        self.boxes.extend(self.get_boxes(labels, tooltips))
+
+        kwargs = {}
+        box = VPacker(children=self.boxes, pad=0, sep=3, **kwargs)
+
+        BaseWidget.__init__(self, box, pad=pad, draw_frame=True)
+        WidgetBoxEventHandlerBase.__init__(self, box)
+
+        self._update_patch(self.patch)
+
+        self.initialize_selections(selected)
+
