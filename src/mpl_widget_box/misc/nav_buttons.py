@@ -21,6 +21,15 @@ class Index:
     def _check_on_boundary(self):
         return (self.min < self.ind, self.ind < self.max)
 
+    def set(self, i):
+        """
+        RETURN:
+        index
+        tuple of boolean : (can decrease, can increase)
+        """
+        self.ind = np.clip(i, self.min, self.max)
+        return self.ind, self._check_on_boundary()
+
     def inc(self, step=1):
         """
         RETURN:
@@ -79,6 +88,10 @@ class NavButtons(CompositeWidgetBase):
     def post_uninstall(self, wbm):
         pass
 
+    def update_label(self, i):
+        v = self.target_list[i]
+        self.lbl.set_label(self.label_format.format(v))
+
     def process_event(self, wbm, ev, status):
 
 
@@ -97,8 +110,7 @@ class NavButtons(CompositeWidgetBase):
         if i == i_old:
             return None
 
-        v = self.target_list[i]
-        self.lbl.set_label(self.label_format.format(v))
+        self.update_label(i)
 
         # we update status to reflect the change.
         status.update({self.lbl.wid: self.lbl.get_status(),
