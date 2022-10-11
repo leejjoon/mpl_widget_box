@@ -91,6 +91,7 @@ class NavButtons(CompositeWidgetBase):
     def update_label(self, i):
         v = self.target_list[i]
         self.lbl.set_label(self.label_format.format(v))
+        return v
 
     def process_event(self, wbm, ev, status):
 
@@ -110,7 +111,7 @@ class NavButtons(CompositeWidgetBase):
         if i == i_old:
             return None
 
-        self.update_label(i)
+        v = self.update_label(i)
 
         # we update status to reflect the change.
         status.update({self.lbl.wid: self.lbl.get_status(),
