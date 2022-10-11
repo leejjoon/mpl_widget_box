@@ -462,6 +462,9 @@ class WidgetBoxManager:
         return None, None
 
     def wait_for_button(self):
+        """Returns the last return value from the callback function or True if the
+        figure is destroyed.
+        """
         from matplotlib.pyplot import fignum_exists
         if fignum_exists(self.fig.number):
             self.fig.waitforbuttonpress()
