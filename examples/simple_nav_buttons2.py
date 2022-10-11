@@ -27,7 +27,7 @@ class NavButtons(CompositeWidgetBase):
         self.label_format = label_format
 
         self.lbl = W.Label(self._cwid("lbl"), "", fixed_width=self.label_width,
-                           align="right")
+                           align="center")
         self.lbl.patch.set_edgecolor("0.8")
 
         self.btn_prev = W.Button(self._cwid("btn-prev"),
@@ -58,7 +58,7 @@ class NavButtons(CompositeWidgetBase):
                  self.lbl,
                  self.btn_forward,
                  self.btn_next]
-            )
+            ),
         ]
 
         return widgets
@@ -68,6 +68,26 @@ class NavButtons(CompositeWidgetBase):
 
     def post_uninstall(self, wbm):
         pass
+
+    def set(self, i):
+        _, boundary_check = self.ind.set(i)
+
+        bp, bn = boundary_check
+        self._update_nav_status(bp, bn)
+        self._update_label(i)
+
+    def _update_label(self, i):
+        v = self.target_list[i]
+        self.lbl.set_label(self.label_format.
+                           format(cur=v, total=len(self.target_list)))
+
+        return v
+
+    def _update_nav_status(self, bp, bn):
+        self.btn_prev.set_context("default" if bp else "disabled")
+        self.btn_backward.set_context("default" if bp else "disabled")
+        self.btn_next.set_context("default" if bn else "disabled")
+        self.btn_forward.set_context("default" if bn else "disabled")
 
     def process_event(self, wbm, ev, status):
 
@@ -91,19 +111,14 @@ class NavButtons(CompositeWidgetBase):
         if i == i_old:
             return None
 
-        v = self.target_list[i]
-        self.lbl.set_label(self.label_format.
-                           format(cur=v, total=len(self.target_list)))
+        v = self._update_label(i)
 
         # we update status to reflect the change.
         status.update({self.lbl.wid: self.lbl.get_status(),
                        self._cwid("ind"): {"index": i, "value": v}})
 
         bp, bn = boundary_check
-        self.btn_prev.set_context("default" if bp else "disabled")
-        self.btn_backward.set_context("default" if bp else "disabled")
-        self.btn_next.set_context("default" if bn else "disabled")
-        self.btn_forward.set_context("default" if bn else "disabled")
+        self._update_nav_status(bp, bn)
 
         return v
 
@@ -115,36 +130,63 @@ s = np.sin(2*np.pi*freqs[0]*t)
 fig, ax = plt.subplots(num=2, clear=True)
 l, = plt.plot(t, s, lw=2)
 
-buttons = [W.Button(f"btn{i:03d}", f"{i:03d}", expand=True, align="center",
-                    auxinfo="paged")
-           for i in range(100)]
-n_per_page = 5
-total_pages = (len(buttons) - 1) // n_per_page + 1
+buttons = W.RadioButtonV(f"btns", [f"{i:03d}" for i in range(100)], pad=0)
+
+n_per_page = 10
+total_pages = (len(buttons.boxes) - 1) // n_per_page + 1
 
 widgets = [
-    nav_button := NavButtons("nav", range(total_pages), bigstep=5,
+    nav_button := NavButtons("nav", range(len(buttons.boxes)),
+                             bigstep=n_per_page,
                              label_width=30),
-    *buttons
 ]
-# W.Button("btn1", "1", expand=True, align="center"),
-# W.Button("btn2", "2", expand=True, align="center"),
+
+widgets2 = [
+    buttons
+]
+
 
 def cb(wbm, ev: W.WidgetBoxEvent, status):
-    # w = wbm.get_widget_by_id("nav")
     v = nav_button.process_event(wbm, ev, status)
     if v is not None:
-        for i, btn in enumerate(buttons):
-            if v*n_per_page <= i < (v+1)*n_per_page:
+
+        page_num = v // 10
+        for i, btn in enumerate(buttons.boxes):
+            if page_num*n_per_page <= i < (page_num+1)*n_per_page:
                 btn.set_visible(True)
             else:
                 btn.set_visible(False)
 
-        # l1.set_data(x, np.power(x, v))
-        # wbm.draw_idle()
+        buttons.select(v)
 
-    if ev.auxinfo == "paged":
-        print("from paged buttons", ev.wid)
+    elif ev.wid == "btns":
+        print(buttons.selected)
+        nav_button.set(buttons.selected)
 
-wbm = install_widgets_simple(ax, widgets, cb)
+
+wbm = WidgetBoxManager(ax.figure)
+
+wbm.add_anchored_widget_box(
+    widgets,
+    ax,
+    loc=1,
+    box_alignment=(1, 0),
+    bbox_to_anchor=ax,
+    xybox=(0.3, -0.8) # this will be multiplied to padx and pady.
+)
+
+wbm.add_anchored_widget_box(
+    widgets2,
+    ax,
+    loc=1,
+    box_alignment=(0, 1),
+    bbox_to_anchor=ax,
+    xybox=(-0.8, 0.3) # this will be multiplied to padx and pady.
+)
+
+if cb is not None:
+    wbm.set_callback(cb)
+
+wbm.install_all()
 
 plt.show()
