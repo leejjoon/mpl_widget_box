@@ -106,6 +106,7 @@ class WidgetBoxManager:
         zorder=0,
         box_alignment=None,
         bbox_to_anchor=None,
+        xybox=None,
         pad=10,
         frameon=True,
     ):
@@ -143,11 +144,21 @@ class WidgetBoxManager:
         from collections.abc import Sequence
 
         _padx, _pady = pad if isinstance(pad, Sequence) else (pad, pad)
-        padx = np.sign(0.5 - xy[0]) * _padx
-        pady = np.sign(0.5 - xy[1]) * _pady
 
         # loc = 5 and 7 have a same effects. See the matplotlib.legend manual.
 
+        # We interpret xybox with a unit of padx and pady.
+        # Thus the default is 1, 1. FIXME The API need ot be revisited.
+
+        if xybox is None:
+            xybox = (1, 1)
+
+        # FIXME padx and pady means the padding from the inner edge of
+        # bbox_to_anchor to the outer edge of the widget, *excluding the
+        # frame*. This is not ideal for anchoring.
+
+        padx = np.sign(0.5 - xy[0]) * _padx * xybox[0]
+        pady = np.sign(0.5 - xy[1]) * _pady * xybox[1]
         xybox = padx, pady
 
         wc = AnchoredWidgetContainer(
