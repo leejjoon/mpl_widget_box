@@ -97,6 +97,42 @@ class WidgetBoxManager:
 
         self._container_list.remove((z, c))
 
+    def add_widget_box(
+            self,
+            widgets,
+            ax,
+            xy,
+            xycoords="data",
+            xybox=(0, 0),
+            boxcoords="offset points",
+            direction="v",
+            zorder=0,
+            box_alignment=(0.5, 0.5),
+            pad=10,
+            frameon=True,
+            clip=None,
+    ):
+
+        from collections.abc import Sequence
+
+        _padx, _pady = pad if isinstance(pad, Sequence) else (pad, pad)
+
+        wc = WidgetContainer(
+            widgets,
+            ax,
+            xy=xy,
+            xycoords=xycoords,
+            xybox=xybox,
+            boxcoords=boxcoords,
+            box_alignment=box_alignment,
+            direction=direction,
+            frameon=frameon,
+            clip=clip,
+        )
+
+        self.add_container(wc, zorder=zorder)
+        return wc
+
     def add_anchored_widget_box(
         self,
         widgets,
@@ -654,6 +690,64 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
         wb.trigger_post_install_hooks(wbm)
 
 
+class WidgetContainer(AxesWidgetBoxContainer):
+    def __init__(
+        self,
+        widgets,
+        ax,
+        xy=(0, 1),
+        xycoords="data",
+        xybox=(0, 0),
+        boxcoords="offset points",
+        box_alignment=(0, 1),
+        frameon=True,
+        clip=None,
+        direction="v",
+    ):
+
+        widget_box = self._make_widget_box(
+            widgets,
+            ax,
+            xy=xy,
+            xycoords=xycoords,
+            xybox=xybox,
+            boxcoords=boxcoords,
+            box_alignment=box_alignment,
+            direction=direction,
+            frameon=frameon,
+            clip=clip,
+        )
+        super().__init__(widget_box, ax)
+
+    def _make_widget_box(
+        self,
+        widgets,
+        ax,
+        xy=(0, 1),
+        xycoords="data",
+        xybox=(0, 0),
+        boxcoords="offset points",
+        box_alignment=(0, 1),
+        frameon=True,
+        clip=None,
+        direction="v",
+    ):
+
+        _widget_box = WidgetBox(
+            widgets,
+            ax,
+            xy=xy,
+            xycoords=xycoords,
+            xybox=xybox,
+            boxcoords=boxcoords,
+            box_alignment=box_alignment,
+            direction=direction,
+            clip=clip,
+            frameon=frameon,
+        )
+
+        return _widget_box
+
 class AnchoredWidgetContainer(AxesWidgetBoxContainer):
     def __init__(
         self,
@@ -819,8 +913,14 @@ class WidgetBoxBase:
     def get_box(self):
         return self.box
 
+    def _check_xy(self, renderer):
+        return True
+
     def handle_event(self, event, parent=None):
 
+        renderer = event.canvas.get_renderer()
+        if not self._check_xy(renderer):
+            return None
         parent = self
         e = self._handler.handle_event(event, parent=parent)
 
@@ -853,6 +953,84 @@ class WidgetBoxBase:
         for w in self._handler.get_child_widgets():
             if w.wid == wid:
                 return w
+
+
+class WidgetBox(WidgetBoxBase):
+    def __init__(
+        self,
+        widgets,
+        ax,
+        xy=(0, 1),
+        xycoords="data",
+        xybox=(0, 0),
+        boxcoords="offset points",
+        box_alignment=(0, 1),
+        frameon=True,
+        clip=None,
+        direction="v",
+    ):
+
+        install_args = dict(
+            xy=xy,
+            xycoords=xycoords,
+            xybox=xybox,
+            boxcoords=boxcoords,
+            box_alignment=box_alignment,
+            frameon=frameon,
+            clip=clip,
+        )
+
+        self._install_args = install_args
+        self.ax = ax
+
+        super().__init__(widgets, direction=direction)
+
+    def _check_xy(self, renderer):
+        return self.box._check_xy(renderer)
+
+    def wrap(self, widgets, direction="v"):
+        if direction == "h":
+            _pack = HPacker(children=widgets, pad=1, sep=2, align="bottom")
+            box = VPacker(children=[_pack], pad=0, sep=0)
+        else:
+            _pack = VPacker(
+                children=widgets,
+                pad=1,
+                sep=2,
+                align="left",  # the default is baseline which depends on
+                # xdescent. While this is okay in general, this
+                # may introduce offset shift when collapsed.
+            )
+            box = HPacker(children=[_pack], pad=0, sep=0)
+
+        wrapped = self._make_wrapped_widget_box(self.ax, box, **self._install_args)
+        return wrapped
+
+    def _make_wrapped_widget_box(
+        self,
+        ax,
+        box,
+        xy=(0, 1),
+        xycoords="data",
+        xybox=(0, 0),
+        boxcoords="offset points",
+        box_alignment=(0, 1),
+        frameon=True,
+        clip=None,
+    ):
+        wrapped_box = AnnotationBbox(
+            box,
+            xy=xy,
+            xybox=xybox,
+            xycoords=xycoords,
+            boxcoords=boxcoords,
+            box_alignment=box_alignment,
+            pad=0.3,
+            animated=True,
+            frameon=frameon,
+            annotation_clip=clip,
+        )
+        return wrapped_box
 
 
 class AnchoredWidgetBox(WidgetBoxBase):
