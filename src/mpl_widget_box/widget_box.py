@@ -9,6 +9,7 @@ import logging
 
 import operator
 
+from matplotlib.axes import Axes
 from matplotlib.offsetbox import (
     OffsetBox,
     AnnotationBbox as _AnnotationBbox,
@@ -65,6 +66,30 @@ class WidgetBoxManager:
         self._stealed_lock = None
 
         self._last_callback_return_value = None
+
+        # self._timer = None
+        self._timer = self.fig.canvas.new_timer(interval=1000)
+        self._timer.add_callback(self.on_tick)
+        self._timer.single_shot = True
+        self._timer_started = False
+
+        from . import widgets as W
+        widgets = [W.Label("l1", "Space"), W.Label("l2", "Zoom")]
+
+        self._spacebar = self.add_widget_box(
+            widgets,
+            fig,
+            xy=(0.5, 0.),
+            xycoords=("figure fraction", "figure fraction"),
+            xybox=(0, 10),
+            box_alignment=(0.5, 0.),
+            frameon=True,
+            clip=False,
+            direction="h",
+        )
+
+        self._spacebar.set_visible(False)
+        self.callback_customkey = None
 
     def get_last_callback_return_value(self):
         return self._last_callback_return_value 
@@ -259,6 +284,9 @@ class WidgetBoxManager:
         cid = self.fig.canvas.mpl_connect("draw_event", self.save_n_draw)
         self._cid_list["draw_event"] = cid
 
+        cid = self.fig.canvas.mpl_connect('key_press_event', self.on_key)
+        self._cid_list["key_press_event"] = cid
+
         # trigger installed event.
         e = WidgetBoxGlobalEvent("@installed")
         self._trigger_callback(e)
@@ -440,6 +468,45 @@ class WidgetBoxManager:
         # self.draw_child_containers(event, draw_foreign_widgets=False)
         self.draw_child_containers(event, draw_foreign_widgets=True)
 
+    def on_tick(self):
+        self._timer_started = False
+        self.hide_spacebar()
+        from matplotlib.backend_bases import Event
+        event = Event("Tick", self.fig.canvas)
+        self.draw_widgets(event)
+
+    def on_key(self, event):
+
+        if event.key == " ":
+            if self._timer_started:
+                self._timer.stop()
+                self._timer_started = False
+                self.hide_spacebar()
+            else:
+                self._timer.start()
+                self._timer_started = True
+                self.show_spacebar()
+
+            self.draw_widgets(event)
+        else:
+            if not self._timer_started:
+                return
+            self._timer.stop()
+            self._timer_started = False
+            self.hide_spacebar()
+
+            if self.callback_customkey is not None:
+                self.callback_customkey(event.key)
+
+            self.draw_widgets(event)
+
+
+    def show_spacebar(self):
+        self._spacebar.set_visible(True)
+
+    def hide_spacebar(self):
+        self._spacebar.set_visible(False)
+
     def draw_widgets(self, event):
         if self.useblit:
             if self.background is not None:
@@ -452,7 +519,9 @@ class WidgetBoxManager:
         to_be_removed = []
         for zorder, c in self._container_list:
             # check if c.ax is still in the figure and uninstall if not.
-            if isinstance(c, AxesWidgetBoxContainer) and c.ax not in self.fig.axes:
+            if (isinstance(c, AxesWidgetBoxContainer) and
+                  isinstance(c.ax, Axes) and
+                  c.ax not in self.fig.axes):
                 c.uninstall(self)
                 to_be_removed.append((zorder, c))
                 continue
