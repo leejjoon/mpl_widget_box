@@ -45,6 +45,82 @@ class AnnotationBbox(_AnnotationBbox):
 
         return delayed_draws
 
+class SpaceBar():
+    def __init__(self, fig, wbm, widgets=None):
+        # self._timer = None
+        self.fig = fig
+
+        self._timer = self.fig.canvas.new_timer(interval=1000)
+        self._timer.add_callback(self.on_tick)
+        self._timer.single_shot = True
+        self._timer_started = False
+
+        if widgets is None:
+            from . import widgets as W
+            widgets = [W.Label("l1", "Space"), W.Label("l2", "Zoom")]
+
+        # FIXME For now, we store wbm instance and trigger it to draw widgets
+        # fro, the `on_tick` method. Not sure if this is a good idea.
+        self._spacebar = wbm.add_widget_box(
+            widgets,
+            fig,
+            xy=(0.5, 0.),
+            xycoords=("figure fraction", "figure fraction"),
+            xybox=(0, 10),
+            box_alignment=(0.5, 0.),
+            frameon=True,
+            clip=False,
+            direction="h",
+        )
+
+        self.wbm = wbm
+        self._spacebar.set_visible(False)
+        self.callback_customkey = None
+
+    def set_customkey_callback(self, cb):
+        self.callback_customkey = cb
+
+    def on_tick(self):
+        self._timer_started = False
+        self.hide_spacebar()
+        from matplotlib.backend_bases import Event
+        event = Event("Tick", self.fig.canvas)
+        self.draw_widgets(event)
+
+    def draw_widgets(self, event):
+        self.wbm.draw_widgets(event)
+
+    def on_key(self, event):
+
+        if event.key == " ":
+            if self._timer_started:
+                self._timer.stop()
+                self._timer_started = False
+                self.hide_spacebar()
+            else:
+                self._timer.start()
+                self._timer_started = True
+                self.show_spacebar()
+
+            self.draw_widgets(event)
+        else:
+            if not self._timer_started:
+                return
+            self._timer.stop()
+            self._timer_started = False
+            self.hide_spacebar()
+
+            if self.callback_customkey is not None:
+                self.callback_customkey(event.key)
+
+            self.draw_widgets(event)
+
+    def show_spacebar(self):
+        self._spacebar.set_visible(True)
+
+    def hide_spacebar(self):
+        self._spacebar.set_visible(False)
+
 
 class WidgetBoxManager:
     def __init__(self, fig, callback=None, **kw):
@@ -67,29 +143,7 @@ class WidgetBoxManager:
 
         self._last_callback_return_value = None
 
-        # self._timer = None
-        self._timer = self.fig.canvas.new_timer(interval=1000)
-        self._timer.add_callback(self.on_tick)
-        self._timer.single_shot = True
-        self._timer_started = False
-
-        from . import widgets as W
-        widgets = [W.Label("l1", "Space"), W.Label("l2", "Zoom")]
-
-        self._spacebar = self.add_widget_box(
-            widgets,
-            fig,
-            xy=(0.5, 0.),
-            xycoords=("figure fraction", "figure fraction"),
-            xybox=(0, 10),
-            box_alignment=(0.5, 0.),
-            frameon=True,
-            clip=False,
-            direction="h",
-        )
-
-        self._spacebar.set_visible(False)
-        self.callback_customkey = None
+        self._spacebar = SpaceBar(fig, self, None)
 
     def get_last_callback_return_value(self):
         return self._last_callback_return_value 
@@ -284,8 +338,10 @@ class WidgetBoxManager:
         cid = self.fig.canvas.mpl_connect("draw_event", self.save_n_draw)
         self._cid_list["draw_event"] = cid
 
-        cid = self.fig.canvas.mpl_connect('key_press_event', self.on_key)
-        self._cid_list["key_press_event"] = cid
+        if self._spacebar is not None:
+            cid = self.fig.canvas.mpl_connect('key_press_event',
+                                              self.on_key)
+            self._cid_list["key_press_event"] = cid
 
         # trigger installed event.
         e = WidgetBoxGlobalEvent("@installed")
@@ -468,44 +524,8 @@ class WidgetBoxManager:
         # self.draw_child_containers(event, draw_foreign_widgets=False)
         self.draw_child_containers(event, draw_foreign_widgets=True)
 
-    def on_tick(self):
-        self._timer_started = False
-        self.hide_spacebar()
-        from matplotlib.backend_bases import Event
-        event = Event("Tick", self.fig.canvas)
-        self.draw_widgets(event)
-
     def on_key(self, event):
-
-        if event.key == " ":
-            if self._timer_started:
-                self._timer.stop()
-                self._timer_started = False
-                self.hide_spacebar()
-            else:
-                self._timer.start()
-                self._timer_started = True
-                self.show_spacebar()
-
-            self.draw_widgets(event)
-        else:
-            if not self._timer_started:
-                return
-            self._timer.stop()
-            self._timer_started = False
-            self.hide_spacebar()
-
-            if self.callback_customkey is not None:
-                self.callback_customkey(event.key)
-
-            self.draw_widgets(event)
-
-
-    def show_spacebar(self):
-        self._spacebar.set_visible(True)
-
-    def hide_spacebar(self):
-        self._spacebar.set_visible(False)
+        self._spacebar.on_key(event)
 
     def draw_widgets(self, event):
         if self.useblit:
