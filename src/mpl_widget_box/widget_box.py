@@ -78,6 +78,13 @@ class SpaceBar():
         self.callback_customkey = None
 
     def set_customkey_callback(self, cb):
+        """
+            def cb_customkey(k):
+                ....
+                return True
+
+        If the callback function returns True, wbm._callback will be triggered with GlobalEvent with "@key" id.
+        """
         self.callback_customkey = cb
 
     def on_tick(self):
@@ -92,6 +99,7 @@ class SpaceBar():
 
     def on_key(self, event):
 
+        r = None
         if event.key == " ":
             if self._timer_started:
                 self._timer.stop()
@@ -111,9 +119,14 @@ class SpaceBar():
             self.hide_spacebar()
 
             if self.callback_customkey is not None:
-                self.callback_customkey(event.key)
+                r = self.callback_customkey(event.key)
 
+            # draw_widgets will be triggered by wbm._on_ky if its return value
+            # is True. Still, we need to call self.draw_widgets to remove
+            # spacebar widget.
             self.draw_widgets(event)
+
+        return r
 
     def show_spacebar(self):
         self._spacebar.set_visible(True)
@@ -525,12 +538,16 @@ class WidgetBoxManager:
         self.draw_child_containers(event, draw_foreign_widgets=True)
 
     def on_key(self, event):
-        self._spacebar.on_key(event)
+        t = self._spacebar.on_key(event)
+        if t:
+            e = WidgetBoxGlobalEvent("@key")
+            self._trigger_callback(e)
 
     def draw_widgets(self, event):
         if self.useblit:
             if self.background is not None:
                 self.fig.canvas.restore_region(self.background)
+
                 self.draw_child_containers(event)
                 self.fig.canvas.blit(self.fig.bbox)
 
