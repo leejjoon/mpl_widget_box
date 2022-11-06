@@ -530,10 +530,49 @@ class WidgetBoxManager:
     def savebg(self, event):
         canvas = self.fig.canvas
         if self.useblit:
-            self.background = canvas.copy_from_bbox(self.fig.bbox)
+            self.background = self._get_background(event)
+
+    def set_background_filter(self, bg_filter):
+        """
+        Modifies the background that is being saved.
+
+            bg_filter(canvas, fig, background) -> background
+        """
+        self._background_filter = bg_filter
+
+    def get_background_filter(self):
+        return self._background_filter
+
+    def _get_background(self, event):
+
+        canvas = event.canvas
+        background = canvas.copy_from_bbox(self.fig.bbox)
+
+        if self.get_background_filter() is not None:
+            background = self._background_filter(canvas, self.fig, background)
+
+        return background
+
+        # renderer = canvas.get_renderer()
+        # bg_rgba = np.array(background)
+        # rgb = bg_rgba[:, :, :-1]
+
+        # gray = np.sum(rgb * [0.299, 0.587, 0.114], axis=-1).astype(rgb.dtype)
+
+        # gray = 255 - ((255 - gray) >> 2)
+
+        # bg_rgba[:, :, :-1] = gray[:, :, np.newaxis]
+
+        # gc = renderer.new_gc()
+        # renderer.draw_image(
+        #     gc, 0, 0, bg_rgba[::-1])
+
+        # return canvas.copy_from_bbox(fig.bbox)
+
 
     def save_n_draw(self, event):
         self.savebg(event)
+
         # self.draw_child_containers(event, draw_foreign_widgets=False)
         self.draw_child_containers(event, draw_foreign_widgets=True)
 
