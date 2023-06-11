@@ -143,6 +143,8 @@ class WidgetBoxManager:
 
         self.useblit = kw.pop("useblit", True)
         self.background = None
+        self._background_filter = None
+
         self._callback = callback
 
         self._cid_list = {}
@@ -829,7 +831,7 @@ class AxesWidgetBoxContainer(WidgetBoxContainerBase):
         # assert wb in [_wb for _, _wb in self._wb_list]
 
         wb.trigger_post_uninstall_hooks(wbm)
-        self.ax.artists.remove(wb.get_artist())
+        wb.get_artist().remove()
         wb.init_widgets(widgets)
         self.ax.add_artist(wb.get_artist())
         wb.trigger_post_install_hooks(wbm)

@@ -48,15 +48,22 @@ class Centered(BaseWidget):
 
 
 class DrawWithDelayed:
+    def _get_bbox_and_child_offsets(self, renderer):
+        return super()._get_bbox_and_child_offsets(renderer)
+
     def draw(self, renderer):
         """
         Update the location of children if necessary and draw them
         to the given *renderer*.
         """
         # Modified from OffsetBox.draw.
-        my_bbox = self.get_extent_offsets(renderer)
-        w, h, xdescent, ydescent, offsets = my_bbox
-        px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
+
+        # my_bbox = self.get_extent_offsets(renderer)
+        # w, h, xdescent, ydescent, offsets = my_bbox
+        # px, py = self.get_offset(w, h, xdescent, ydescent, renderer)
+
+        bbox, offsets = self._get_bbox_and_child_offsets(renderer)
+        px, py = self.get_offset(bbox, renderer)
 
         delayed_draws = []
         for c, (ox, oy) in zip(self.get_visible_children(), offsets):
@@ -64,7 +71,7 @@ class DrawWithDelayed:
             if hasattr(c, "draw_with_outer_bbox"):
                 # update the outer_bbox
                 outer_bbox = self._get_outer_bbox(
-                    px, py, my_bbox, c.get_window_extent(renderer)
+                    px, py, bbox, c.get_window_extent(renderer)
                 )
                 dd = c.draw_with_outer_bbox(renderer, outer_bbox)
             else:
@@ -87,8 +94,10 @@ class VPacker(DrawWithDelayed, _VPacker):
     def _get_outer_bbox(self, px, py, bbox, cb):
         # bbox : bbox of the self
         # cb : bbox of the child
-        w, h, xdescent, ydescent, offsets = bbox
-        left = px - xdescent
+        # w, h, xdescent, ydescent, offsets = bbox
+        # left = px - xdescent
+        w = bbox.width
+        left = px + bbox.x0
 
         outer_bbox = mtransforms.Bbox.from_bounds(left, cb.ymin, w, cb.height)
 
@@ -105,8 +114,10 @@ class HPacker(DrawWithDelayed, _HPacker):
     def _get_outer_bbox(self, px, py, bbox, cb):
         # bbox : bbox of the self
         # cb : bbox of the child
-        w, h, xdescent, ydescent, offsets = bbox
-        bottom = py - ydescent
+        # w, h, xdescent, ydescent, offsets = bbox
+        # bottom = py - ydescent
+        h = bbox.height
+        bottom = py + bbox.y0
 
         outer_bbox = mtransforms.Bbox.from_bounds(cb.xmin, bottom, cb.width, h)
 
