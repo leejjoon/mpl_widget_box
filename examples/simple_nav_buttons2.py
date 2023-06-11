@@ -1,7 +1,5 @@
 import numpy as np
 
-import matplotlib.pyplot as plt
-
 from mpl_widget_box import (widgets as W,
                             WidgetBoxManager,
                             install_widgets_simple)
@@ -123,70 +121,83 @@ class NavButtons(CompositeWidgetBase):
         return v
 
 
-freqs = np.arange(2, 20, 3)
-t = np.arange(0.0, 1.0, 0.001)
-s = np.sin(2*np.pi*freqs[0]*t)
+def plot(fig):
 
-fig, ax = plt.subplots(num=2, clear=True)
-l, = plt.plot(t, s, lw=2)
+    freqs = np.arange(2, 20, 3)
+    t = np.arange(0.0, 1.0, 0.001)
+    s = np.sin(2*np.pi*freqs[0]*t)
 
-buttons = W.RadioButtonV(f"btns", [f"{i:03d}" for i in range(100)], pad=0)
+    ax = fig.add_subplot(111)
+    l, = ax.plot(t, s, lw=2)
 
-n_per_page = 10
-total_pages = (len(buttons.boxes) - 1) // n_per_page + 1
+    buttons = W.RadioButtonV(f"btns", [f"{i:03d}" for i in range(100)], pad=0)
 
-widgets = [
-    nav_button := NavButtons("nav", range(len(buttons.boxes)),
-                             bigstep=n_per_page,
-                             label_width=30),
-]
+    n_per_page = 10
+    total_pages = (len(buttons.boxes) - 1) // n_per_page + 1
 
-widgets2 = [
-    buttons
-]
+    widgets = [
+        nav_button := NavButtons("nav", range(len(buttons.boxes)),
+                                 bigstep=n_per_page,
+                                 label_width=30),
+    ]
 
-
-def cb(wbm, ev: W.WidgetBoxEvent, status):
-    v = nav_button.process_event(wbm, ev, status)
-    if v is not None:
-
-        page_num = v // 10
-        for i, btn in enumerate(buttons.boxes):
-            if page_num*n_per_page <= i < (page_num+1)*n_per_page:
-                btn.set_visible(True)
-            else:
-                btn.set_visible(False)
-
-        buttons.select(v)
-
-    elif ev.wid == "btns":
-        print(buttons.selected)
-        nav_button.set(buttons.selected)
+    widgets2 = [
+        buttons
+    ]
 
 
-wbm = WidgetBoxManager(ax.figure)
+    def cb(wbm, ev: W.WidgetBoxEvent, status):
+        v = nav_button.process_event(wbm, ev, status)
+        if v is not None:
 
-wbm.add_anchored_widget_box(
-    widgets,
-    ax,
-    loc=1,
-    box_alignment=(1, 0),
-    bbox_to_anchor=ax,
-    xybox=(0.3, -0.8) # this will be multiplied to padx and pady.
-)
+            page_num = v // 10
+            for i, btn in enumerate(buttons.boxes):
+                if page_num*n_per_page <= i < (page_num+1)*n_per_page:
+                    btn.set_visible(True)
+                else:
+                    btn.set_visible(False)
 
-wbm.add_anchored_widget_box(
-    widgets2,
-    ax,
-    loc=1,
-    box_alignment=(0, 1),
-    bbox_to_anchor=ax,
-    xybox=(-0.8, 0.3) # this will be multiplied to padx and pady.
-)
+            buttons.select(v)
 
-if cb is not None:
-    wbm.set_callback(cb)
+        elif ev.wid == "btns":
+            print(buttons.selected)
+            nav_button.set(buttons.selected)
 
-wbm.install_all()
+        l.set_data(t, s + np.random.rand(len(s))*0.4)
+        wbm.draw_idle()
 
-plt.show()
+    wbm = WidgetBoxManager(ax.figure)
+
+    wbm.add_anchored_widget_box(
+        widgets,
+        ax,
+        loc=1,
+        box_alignment=(1, 0),
+        bbox_to_anchor=ax,
+        xybox=(0.3, -0.8) # this will be multiplied to padx and pady.
+    )
+
+    wbm.add_anchored_widget_box(
+        widgets2,
+        ax,
+        loc=1,
+        box_alignment=(0, 1),
+        bbox_to_anchor=ax,
+        xybox=(-0.8, 0.3) # this will be multiplied to padx and pady.
+    )
+
+    if cb is not None:
+        wbm.set_callback(cb)
+
+    wbm.install_all()
+    return wbm
+
+def main():
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    wbm = plot(fig)
+
+    plt.show()
+
+if __name__ == '__main__':
+    main()
